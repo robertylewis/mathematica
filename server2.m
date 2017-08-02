@@ -17,9 +17,9 @@ Handler[{in_InputStream, out_OutputStream}] :=
    WriteString["stdout", o <>"\n\n"];
    Close[out];];
 
-OutputFormat[i_Integer] := "@I@[" <> ToString[i] <> "]"
-OutputFormat[s_String] := "@T@[\"" <> s <> "\"]"
-OutputFormat[s_Symbol] := "@Y@[" <> ToString[s] <> "]"
+OutputFormat[i_Integer] := "I[" <> ToString[i] <> "]"
+OutputFormat[s_String] := "T[\"" <> s <> "\"]"
+OutputFormat[s_Symbol] := "Y[" <> ToString[s] <> "]"
 OutputFormat[h_[args___]] := 
- "@A@" <> OutputFormat[h] <> "[" <> 
+ "A" <> OutputFormat[h] <> "[" <> 
   StringRiffle[Map[OutputFormat, List[args]], ","] <> "]"
