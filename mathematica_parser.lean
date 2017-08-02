@@ -142,9 +142,15 @@ meta def quote_string (s : string) : string :=
 
 
 meta def parse_mmexpr_tac (s : char_buffer) : tactic mmexpr :=
-do sum.inr mme ← return $ parser.run parse_mmexpr ((strip_trailing_whitespace_cb ∘ mk_mono_cb) s),
-   return mme
+match parser.run parse_mmexpr ((strip_trailing_whitespace_cb ∘ mk_mono_cb) s) with
+| sum.inr mme := return mme
+| sum.inl error := tactic.fail error
+end
 
+/-meta def parse_mmexpr_tac (s : char_buffer) : tactic mmexpr :=
+(do sum.inr mme ← return $ parser.run parse_mmexpr ((strip_trailing_whitespace_cb ∘ mk_mono_cb) s),
+   return mme)
+-/
 namespace mathematica
 
 section
