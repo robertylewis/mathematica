@@ -115,6 +115,9 @@ if s.back = '\n' ∨ s.back = ' ' then strip_trailing_whitespace s.pop_back else
 meta def escape_quotes (s : string) : string :=
 s.fold "" (λ s' c, if c = '\"' then s' ++ "\\\"" else s'.str c)
 
+meta def escape_term (s : string) : string :=
+s.fold "" (λ s' c, if c = '&' then s' ++ "&&" else s'.str c)
+
 meta def quote_string (s : string) : string :=
 "\'" ++ s ++ "\'"
 

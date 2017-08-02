@@ -148,7 +148,7 @@ The evaluation happens in a unique context; declarations that are made during
 evaluation will not be available in future evaluations.
 -/
 meta def execute (cmd : string) : tactic string :=
-let cmd' := (/-quote_string ∘ -/escape_quotes) cmd in
+let cmd' := (escape_term ∘ escape_quotes) cmd ++ "&!" in
 tactic.run_io 
  (λ i, @io.cmd i { cmd := "python2",
  args := ["/e/Dropbox/lean/mathematica/client2.py", cmd'
