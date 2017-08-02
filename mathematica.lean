@@ -142,17 +142,30 @@ The type mmexpr reflects Mathematica expression syntax.
 
 namespace tactic
 namespace mathematica
+
+section
+variable [io.interface]
+def write_file (fn : string) (cnts : string) (mode := io.mode.write) : io unit := do
+h ← io.mk_file_handle fn io.mode.write,
+io.fs.write h cnts.to_char_buffer,
+io.fs.close h
+end
+
 /--
 execute str evaluates str in Mathematica.
 The evaluation happens in a unique context; declarations that are made during
 evaluation will not be available in future evaluations.
 -/
 meta def execute (cmd : string) : tactic string :=
-let cmd' := (escape_term ∘ escape_quotes) cmd ++ "&!" in
-tactic.run_io 
- (λ i, @io.cmd i { cmd := "python2",
- args := ["/e/Dropbox/lean/mathematica/client2.py", cmd'
-] })
+let cmd' := escape_term cmd ++ "&!",
+    args := ["/e/Dropbox/lean/mathematica/client2.py"] in
+if cmd'.length < 2040 then
+  tactic.run_io  (λ i, @io.cmd i { cmd := "python2", args := args.append [escape_quotes cmd'] })
+else do 
+   path ← mathematica.temp_file_name "E:\\Dropbox\\lean\\mathematica\\exch",
+   tactic.run_io (λ i, @write_file i path cmd' io.mode.write),
+   tactic.run_io (λ i, @io.cmd i { cmd := "python2", args := args.append ["-f", path] })
+
    
 meta def execute_and_eval (cmd : string) : tactic mmexpr :=
 execute cmd >>= parse_mmexpr_tac

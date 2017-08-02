@@ -1,4 +1,4 @@
-import data.buffer.parser
+import data.buffer.parser system.io
 open parser
 --namespace mathematica
 
@@ -121,18 +121,34 @@ s.fold "" (λ s' c, if c = '&' then s' ++ "&&" else s'.str c)
 meta def quote_string (s : string) : string :=
 "\'" ++ s ++ "\'"
 
-#eval "\'"
-
 meta def parse_mmexpr_tac (s : string) : tactic mmexpr :=
 do sum.inr mme ← return $ parser.run_string parse_mmexpr ((strip_trailing_whitespace ∘ mk_mono) s),
    return mme
 
---def singleparse : parser mmexpr :=
---do m ← parse_app_aux parse_int,
- --  m2 ← 
+namespace mathematica
 
-/-run_cmd tactic.trace $ run_string (parse_app_aux parse_int) "@SYMAPP@[@INTEGER@[2]][@INTEGER@[3],@INTEGER@[4]]"
-run_cmd tactic.trace $ run_string parse_mmexpr "@SYMAPP@@INTEGER@[2][@INTEGER@[2],@SYMBOL@[xyz],@SYMAPP@@SYMBOL@[Add][@STRING@[\"five\"]]]"
-run_cmd tactic.trace $ run_string parse_int "@INTEGER@[-10]"-/
+section
+variable [io.interface]
+def write_file (fn : string) (cnts : string) (mode := io.mode.write) : io unit := do
+h ← io.mk_file_handle fn io.mode.write,
+io.fs.write h cnts.to_char_buffer,
+io.fs.close h
 
---end mathematica
+
+def exists_file (f : string) : io bool := do
+ch ← io.proc.spawn { cmd := "test", args := ["-f", f] },
+ev ← io.proc.wait ch,
+return $ ev = 0
+
+meta def new_text_file : string → nat → io nat | base n :=
+do b ← exists_file (base ++ to_string n ++ ".txt"),
+   if b then new_text_file base (n+1)
+   else return n
+
+end
+
+meta def temp_file_name (base : string) : tactic string :=
+do n ← tactic.run_io (λ i, @new_text_file i base 0),
+   return $ base ++ to_string n ++ ".txt"
+end mathematica
+
