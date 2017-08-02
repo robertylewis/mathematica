@@ -640,7 +640,7 @@ run_command_on_using cmd e path reflects e into Mathematica syntax, applies cmd 
 evaluates this in Mathematica after importing the file at path, and attempts to translate the result to a pexpr.
 -/
 meta def run_command_on_using (cmd : string → string) (e : expr) (path : string) : tactic pexpr := 
-do p ← mk_get_cmd path,
+do p ← escape_slash <$> mk_get_cmd path,
    run_command_on (λ s, p ++ cmd s) e
 
 meta def run_command_on_2 (cmd : string → string → string) (e1 e2 : expr) : tactic pexpr :=
@@ -655,7 +655,7 @@ and attempts to translate the result to a pexpr.
 -/
 meta def run_command_on_2_using (cmd : string → string → string) (e1 e2 : expr) (path : string) :
      tactic pexpr :=
-do p ← mk_get_cmd path,
+do p ← escape_slash <$> mk_get_cmd path,
   run_command_on_2 (λ s1 s2, p ++ cmd s1 s2) e1 e2
 
 private def sep_string : list string → string

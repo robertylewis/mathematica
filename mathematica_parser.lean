@@ -137,6 +137,9 @@ s.fold "" (λ s' c, if c = '\"' then s' ++ "\\\"" else s'.str c)
 meta def escape_term (s : string) : string :=
 s.fold "" (λ s' c, if c = '&' then s' ++ "&&" else s'.str c)
 
+meta def escape_slash (s : string) : string :=
+s.fold "" (λ s' c, if c = '\\' then s' ++ "\\" else s'.str c)
+
 meta def quote_string (s : string) : string :=
 "\'" ++ s ++ "\'"
 
