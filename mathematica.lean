@@ -158,11 +158,11 @@ evaluation will not be available in future evaluations.
 -/
 meta def execute (cmd : string) : tactic char_buffer :=
 let cmd' := escape_term cmd ++ "&!",
-    args := ["/e/Dropbox/lean/mathematica/client2.py"] in
+    args := ["_target/deps/mathematica/client2.py"] in
 if cmd'.length < 2040 then
   tactic.run_io  (λ i, @io.buffer_cmd i { cmd := "python2", args := args.append [escape_quotes cmd'] })
 else do 
-   path ← mathematica.temp_file_name "E:\\Dropbox\\lean\\mathematica\\exch",
+   path ← mathematica.temp_file_name "exch",
    tactic.run_io (λ i, @write_file i path cmd' io.mode.write),
    tactic.run_io (λ i, @io.buffer_cmd i { cmd := "python2", args := args.append ["-f", path] })
 
@@ -684,17 +684,3 @@ do p ← mk_get_cmd path,
 
 end mathematica
 end tactic
-
-#exit
-
-@[sym_to_pexpr]
-meta def pow_trans : mathematica.sym_trans_pexpr_rule :=
-⟨"Power", ```(nat.pow)⟩
-
-
-
-variable x : ℕ
-include x
-example : true := by do
-tactic.to_expr ```(x*x - 2*x + 1) >>= tactic.mathematica.run_command_on (λ s, s ++ " // LeanForm // Activate // Factor") >>= tactic.to_expr >>= tactic.trace,
-tactic.triv

@@ -1,5 +1,6 @@
 << "SocketLink`"
-<< "E:\\Dropbox\\lean\\mathematica\\lean_form.m"
+<< "lean_form.m"
+
 CreateAsynchronousServer[CreateServerSocket[10000], Handler]
 
 TestNextChar[in_] := BinaryRead[in, "Character8"] != "&"
