@@ -13,8 +13,19 @@ def process(s):
     #print "buf is:", buf
     num = int(buf)
     #print "num = ", num
-    buf = clientsocket.recv(num)
+    recvd = 8
+    buf = ""
+    while recvd < num:
+        buf += clientsocket.recv(8)
+        recvd += 8
+    buf += clientsocket.recv(num%8+1)
     #buf = clientsocket.recv(1000)
+    f = open("/e/Dropbox/lean/mathematica/temp","w")
+    f.write("writing...\n")
+    f.write(str(num) + "\n")
+    f.write(buf)
+    f.write("\n\n" + str(len(buf)))
+    f.close()
     print buf
 
 def read_from_file():

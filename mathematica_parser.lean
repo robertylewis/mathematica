@@ -69,26 +69,26 @@ def parse_is_neg : parser bool :=
 (ch '-' >> return tt) <|> return ff
 
 def parse_int : parser mmexpr := 
-do str "@INTEGER@[",
+do str "@I@[",
    is_neg ← parse_is_neg,
    n ← (nat_of_string ∘ list.as_string) <$> many (sat char.is_alphanum),
    ch ']',
    return $ mmexpr.mint (if is_neg then -n else n)
 
 def parse_string : parser mmexpr :=
-do str "@STRING@[\"",
+do str "@T@[\"",
    s ←  list.as_string <$> many (sat ((≠) '\"')), 
    ch '\"', ch ']',
    return $ mmexpr.mstr s
 
 def parse_symbol : parser mmexpr :=
-do str "@SYMBOL@[",
+do str "@Y@[",
    s ←  list.as_string <$> many (sat ((≠) ']')), 
    ch ']',
    return $ mmexpr.sym s
 
 def parse_app_aux (parse_expr : parser mmexpr) : parser mmexpr :=
-do str "@SYMAPP@",
+do str "@A@",
    hd ← parse_expr,
    ch '[',
    args ← sep_by (ch ',') parse_expr,
