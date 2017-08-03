@@ -205,7 +205,7 @@ Returns the path to {LEAN_ROOT}/extras/mathematica (TODO: FIX COMMENT)
 -/
 meta def extras_path : tactic string :=
 do s ← run_io $ λ i, @io.cmd i {cmd := "pwd"},
-   return $ s ++ "/extras/"
+   return $ strip_trailing_whitespace s ++ "/extras/"
 
 end mathematica
 end tactic
@@ -614,9 +614,9 @@ namespace tactic
 namespace mathematica
 open mathematica
 
-private meta def mk_get_cmd (path : string) : tactic string :=
+meta def mk_get_cmd (path : string) : tactic string :=
 do s ← extras_path,
-   return $ "Get[\"" ++ path ++ "\",Path->{\""++ s ++"\"}];"
+   return $ "Get[\"" ++ path ++ "\",Path->{DirectoryFormat[\""++ s ++"\"]}];"
 
 /--
 load_file path will load the file found at path into Mathematica.

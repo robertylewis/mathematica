@@ -1,6 +1,14 @@
 << "SocketLink`"
 << "lean_form.m"
 
+WindowsDirQ[s_String] := StringTake[s, 1] != "/";
+ToWindowsDir[s_String] := 
+ If[WindowsDirQ[s], s, 
+  With[{t = StringTake[s, {2}]}, 
+       FileNameJoin[{t <> ":" <> StringDrop[s, 2]}]]];
+DirectoryFormat[s_String] := 
+ If[WindowsDirQ[Directory[]], ToWindowsDir[s], s]
+
 CreateAsynchronousServer[CreateServerSocket[10000], Handler]
 
 TestNextChar[in_] := BinaryRead[in, "Character8"] != "&"
