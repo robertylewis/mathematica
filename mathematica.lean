@@ -16,15 +16,11 @@ meta def rb_map.insert_list {key : Type} {data : Type} : rb_map key data → lis
 | m [] := m
 | m ((k, d) :: t) := rb_map.insert_list (rb_map.insert m k d) t
 
-meta instance : has_ordering string := ⟨λ s1 s2, name.cmp s1 s2⟩
 local attribute [instance] htfi
-
-
 
 -- this has the expected behavior only if i is under the max size of unsigned
 def unsigned_of_int (i : int) : unsigned := 
 int.rec_on i (λ k, unsigned.of_nat k) (λ k, unsigned.of_nat k)
-
 
 meta def expand_let : expr → expr
 | (elet nm tp val bod) := expr.replace bod (λ e n, match e with |var n := some val | _ := none end)
@@ -71,7 +67,7 @@ meta def form_of_expr : expr → string
 | (var i)                     := "LeanVar[" ++ (format.to_string (to_fmt i) options.mk) ++ "]"
 | (sort lvl)                  := "LeanSort[" ++ form_of_lvl lvl ++ "]"
 | (const nm lvls)             := "LeanConst[" ++ form_of_name nm ++ ", " ++ form_of_lvl_list lvls ++ "]"
-| (mvar nm tp)                := "LeanMetaVar[" ++ form_of_name nm ++ ", " ++ form_of_expr tp ++ "]"
+| (mvar nm nm' tp)                := "LeanMetaVar[" ++ form_of_name nm ++ ", " ++ form_of_expr tp ++ "]"
 | (local_const nm ppnm bi tp) := "LeanLocal[" ++ form_of_name nm ++ ", " ++ 
                                      form_of_name ppnm ++ ", " ++ form_of_binder_info bi ++ 
                                      ", " ++ form_of_expr tp ++ "]"
@@ -240,31 +236,31 @@ monad.mapm (λ n, mk_const n >>= eval_expr app_trans_expr_unkeyed_rule) l
 
 @[user_attribute]
 private meta def sym_to_pexpr_rule : caching_user_attribute (rb_lmap string pexpr) :=
-⟨⟨`sym_to_pexpr, "rule for translating a mmexpr.sym to a pexpr"⟩, mk_sym_trans_pexpr_db, []⟩ 
+⟨⟨`sym_to_pexpr, "rule for translating a mmexpr.sym to a pexpr", none, none⟩, mk_sym_trans_pexpr_db, []⟩ 
 
 @[user_attribute]
 private meta def sym_to_expr_rule : caching_user_attribute (rb_lmap string expr) :=
-⟨⟨`sym_to_expr, "rule for translating a mmexpr.sym to a expr"⟩, mk_sym_trans_expr_db, []⟩ 
+⟨⟨`sym_to_expr, "rule for translating a mmexpr.sym to a expr", none, none⟩, mk_sym_trans_expr_db, []⟩ 
 
 @[user_attribute]
 private meta def app_to_pexpr_keyed_rule : 
 caching_user_attribute (rb_lmap string (trans_env → list mmexpr → tactic pexpr)) :=
-⟨⟨`app_to_pexpr_keyed, "rule for translating a mmexpr.app to a pexpr"⟩, mk_app_trans_pexpr_keyed_db, []⟩ 
+⟨⟨`app_to_pexpr_keyed, "rule for translating a mmexpr.app to a pexpr", none, none⟩, mk_app_trans_pexpr_keyed_db, []⟩ 
 
 @[user_attribute]
 private meta def app_to_expr_keyed_rule : 
 caching_user_attribute (rb_lmap string (trans_env → list mmexpr → tactic expr)) :=
-⟨⟨`app_to_expr_keyed, "rule for translating a mmexpr.app to a expr"⟩, mk_app_trans_expr_keyed_db, []⟩ 
+⟨⟨`app_to_expr_keyed, "rule for translating a mmexpr.app to a expr", none, none⟩, mk_app_trans_expr_keyed_db, []⟩ 
 
 @[user_attribute]
 private meta def app_to_pexpr_unkeyed_rule : 
 caching_user_attribute (list (trans_env → mmexpr → list mmexpr → tactic pexpr)) :=
-⟨⟨`app_to_pexpr_unkeyed, "rule for translating a mmexpr.app to a pexpr"⟩, mk_app_trans_pexpr_unkeyed_db, []⟩ 
+⟨⟨`app_to_pexpr_unkeyed, "rule for translating a mmexpr.app to a pexpr", none, none⟩, mk_app_trans_pexpr_unkeyed_db, []⟩ 
 
 @[user_attribute]
 private meta def app_to_expr_unkeyed_rule : 
 caching_user_attribute (list (trans_env → mmexpr → list mmexpr → tactic expr)) :=
-⟨⟨`app_to_expr_unkeyed, "rule for translating a mmexpr.app to a expr"⟩, mk_app_trans_expr_unkeyed_db, []⟩ 
+⟨⟨`app_to_expr_unkeyed, "rule for translating a mmexpr.app to a expr", none, none⟩, mk_app_trans_expr_unkeyed_db, []⟩ 
 
 
 private meta def expr_of_mmexpr_app_keyed (env : trans_env) : mmexpr → list mmexpr → tactic expr
