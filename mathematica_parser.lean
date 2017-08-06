@@ -186,5 +186,5 @@ def io.buffer_cmd (args : io.process.spawn_args) : io char_buffer :=
 do child ← io.proc.spawn { args with stdout := io.process.stdio.piped },
   buf ← io.fs.read_to_end child.stdout,
   exitv ← io.proc.wait child,
-  when (exitv ≠ 0) $ io.fail $ "process exited with status " ++ exitv.to_string,
+  when (exitv ≠ 0) $ io.fail $ "process exited with status " ++ to_string exitv,
   return buf
