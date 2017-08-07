@@ -8,6 +8,17 @@ Author: Robert Y. Lewis
 import .mathematica_parser system.io
 open expr string level name binder_info
 
+namespace list
+variables {α β : Type} 
+universes u v w
+
+def for : list α → (α → β) → list β := flip map
+
+def mfor {m : Type u → Type v} [monad m] {α : Type w} {β : Type u} (l : list α) (f : α → m β) : m (list β) :=
+mmap f l
+
+end list
+
 meta def rb_lmap.of_list {key : Type} {data : Type} [has_ordering key] : list (key × data) → rb_lmap key data
 | []           := rb_lmap.mk key data
 | ((k, v)::ls) := rb_lmap.insert (rb_lmap.of_list ls) k v
@@ -425,7 +436,7 @@ end⟩
 meta def mmexpr_mvar_to_expr : app_trans_expr_keyed_rule :=
 ⟨"LeanMetaVar",
 λ env args, match args with
-| [nm, tp] := do nm' ← name_of_mmexpr nm, tp' ← expr_of_mmexpr env tp, return $ mvar nm' tp'
+| [nm, tp] := do nm' ← name_of_mmexpr nm, tp' ← expr_of_mmexpr env tp, return $ mvar nm' `workaround tp'
 | _        := failed
 end⟩
 
@@ -490,17 +501,17 @@ meta def pexpr_fold_op (dflt op : pexpr) : list pexpr → pexpr
 @[app_to_pexpr_keyed]
 meta def add_to_pexpr : app_trans_pexpr_keyed_rule :=
 ⟨"Plus", 
-λ env args, do args' ← monad.for args (pexpr_of_mmexpr env), return $ pexpr_fold_op ```(0) ```(has_add.add) args'⟩
+λ env args, do args' ← list.mfor args (pexpr_of_mmexpr env), return $ pexpr_fold_op ```(0) ```(has_add.add) args'⟩
 
 @[app_to_pexpr_keyed]
 meta def mul_to_pexpr : app_trans_pexpr_keyed_rule :=
 ⟨"Times", 
-λ env args, do args' ← monad.for args (pexpr_of_mmexpr env), return $ pexpr_fold_op ```(1) ```(has_mul.mul) args'⟩
+λ env args, do args' ← list.mfor args (pexpr_of_mmexpr env), return $ pexpr_fold_op ```(1) ```(has_mul.mul) args'⟩
 
 @[app_to_pexpr_keyed]
 meta def list_to_pexpr : app_trans_pexpr_keyed_rule := 
 ⟨"List", λ env args, 
-         do args' ← monad.for args (pexpr_of_mmexpr env), 
+         do args' ← list.mfor args (pexpr_of_mmexpr env), 
             return $ list.foldr (λ h t, ```(%%h :: %%t)) ```([]) args'⟩
 
 @[app_to_pexpr_keyed]
@@ -533,7 +544,7 @@ meta def pexpr.to_raw_expr : pexpr → expr
 | (var n)                     := var n
 | (sort l)                    := sort l
 | (const nm ls)               := const nm ls
-| (mvar n e)                  := mvar n (pexpr.to_raw_expr e)
+| (mvar n n' e)                  := mvar n n' (pexpr.to_raw_expr e)
 | (local_const nm ppnm bi tp) := local_const nm ppnm bi (pexpr.to_raw_expr tp)
 | (app f a)                   := app (pexpr.to_raw_expr f) (pexpr.to_raw_expr a)
 | (lam nm bi tp bd)           := lam nm bi (pexpr.to_raw_expr tp) (pexpr.to_raw_expr bd)
@@ -545,7 +556,7 @@ meta def pexpr.of_raw_expr : expr → pexpr
 | (var n)                     := var n
 | (sort l)                    := sort l
 | (const nm ls)               := const nm ls
-| (mvar n e)                  := mvar n (pexpr.of_raw_expr e)
+| (mvar n n' e)                  := mvar n n' (pexpr.of_raw_expr e)
 | (local_const nm ppnm bi tp) := local_const nm ppnm bi (pexpr.of_raw_expr tp)
 | (app f a)                   := app (pexpr.of_raw_expr f) (pexpr.of_raw_expr a)
 | (lam nm bi tp bd)           := lam nm bi (pexpr.of_raw_expr tp) (pexpr.of_raw_expr bd)
@@ -584,7 +595,7 @@ meta def function_to_pexpr : app_trans_pexpr_keyed_rule :=
      bd' ← pexpr_of_mmexpr (env.insert x v) bd,
      return $ mk_lambda' v bd' 
 | [app (sym "List") l, bd] :=
-  do vs ← monad.for l sym_to_lcp,
+  do vs ← list.mfor l sym_to_lcp,
      bd' ← pexpr_of_mmexpr (env.insert_list vs) bd,
      return $ mk_lambdas (list.map prod.snd vs) bd'
 | _ := failed
