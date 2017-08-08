@@ -56,7 +56,7 @@ meta def form_of_lvl : level → string
 | (succ l)          := "LeanLevelSucc[" ++ form_of_lvl l ++ "]"
 | (level.max l1 l2) := "LeanLevelMax[" ++ form_of_lvl l1 ++ ", " ++ form_of_lvl l2 ++ "]"
 | (imax l1 l2)      := "LeanLevelIMax[" ++ form_of_lvl l1 ++ ", " ++ form_of_lvl l2 ++ "]"
-| (param nm)        := "LeanLevelParam[̈" ++ form_of_name nm ++ "]"
+| (param nm)        := "LeanLevelParam[" ++ form_of_name nm ++ "]"
 | (mvar nm)         := "LeanLevelMeta[" ++ form_of_name nm ++ "]"
 
 meta def form_of_lvl_list : list level → string
