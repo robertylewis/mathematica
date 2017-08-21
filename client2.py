@@ -11,10 +11,11 @@ def process(s):
     while sep not in buf:
         buf += clientsocket.recv(8)
     #print "buf is:", buf
-    num = int(buf)
+    splt = buf.split(sep, 1)
+    num = int(splt[0])
     #print "num = ", num
     recvd = 8
-    buf = ""
+    buf = splt[1]
     while recvd < num:
         buf += clientsocket.recv(8)
         recvd += 8
