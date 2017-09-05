@@ -544,6 +544,31 @@ meta def list_to_pexpr : app_trans_pexpr_keyed_rule :=
          do args' ← monad.for args (pexpr_of_mmexpr env), 
             return $ list.foldr (λ h t, ```(%%h :: %%t)) ```([]) args'⟩
 
+@[app_to_pexpr_keyed]
+meta def and_to_pexpr : app_trans_pexpr_keyed_rule :=
+⟨"And", 
+λ env args, do args' ← monad.for args (pexpr_of_mmexpr env), return $ pexpr_fold_op ```(true) ```(and) args'⟩
+
+@[app_to_pexpr_keyed]
+meta def or_to_pexpr : app_trans_pexpr_keyed_rule :=
+⟨"Or", 
+λ env args, do args' ← monad.for args (pexpr_of_mmexpr env), return $ pexpr_fold_op ```(false) ```(or) args'⟩
+
+@[app_to_pexpr_keyed]
+meta def not_to_pexpr : app_trans_pexpr_keyed_rule :=
+⟨"Not",
+λ env args, match args with
+ | [t] := do t' ← pexpr_of_mmexpr env t, return ```(¬ %%t')
+ | _   := failed
+ end⟩
+
+@[app_to_pexpr_keyed]
+meta def implies_to_pexpr : app_trans_pexpr_keyed_rule :=
+⟨"Implies",
+λ env args, match args with
+ | [h,c] := do h' ← pexpr_of_mmexpr env h, c' ← pexpr_of_mmexpr env c, return $ ```(%%h' → %%c')
+ | _   := failed
+ end⟩
 
 meta def pexpr.to_raw_expr : pexpr → expr
 | (var n)                     := var n
@@ -585,6 +610,11 @@ pexpr.of_raw_expr (lambdas l (pexpr.to_raw_expr b))
 meta def mk_lambda' (x : expr) (b : pexpr) : pexpr :=
 pexpr.of_raw_expr (lambdas [x] (pexpr.to_raw_expr b))
 
+meta def mk_pis (l : list expr) (b : pexpr) : pexpr :=
+pexpr.of_raw_expr (pis l (pexpr.to_raw_expr b))
+
+meta def mk_pi' (x : expr) (b : pexpr) : pexpr :=
+pexpr.of_raw_expr (pis [x] (pexpr.to_raw_expr b))
 
 @[app_to_pexpr_keyed]
 meta def function_to_pexpr : app_trans_pexpr_keyed_rule :=
@@ -598,6 +628,25 @@ meta def function_to_pexpr : app_trans_pexpr_keyed_rule :=
   do vs ← monad.for l sym_to_lcp,
      bd' ← pexpr_of_mmexpr (env.insert_list vs) bd,
      return $ mk_lambdas (list.map prod.snd vs) bd'
+| _ := failed
+end⟩
+
+@[app_to_pexpr_keyed]
+meta def forall_to_pexpr : app_trans_pexpr_keyed_rule :=
+⟨"ForAll",
+λ env args, match args with
+| [sym x, bd] := 
+  do v ← return $ mk_local_const_placeholder x, 
+     bd' ← pexpr_of_mmexpr (env.insert x v) bd,
+     return $ mk_pi' v bd' 
+| [app (sym "List") l, bd] :=
+  do vs ← monad.for l sym_to_lcp,
+     bd' ← pexpr_of_mmexpr (env.insert_list vs) bd,
+     return $ mk_pis (list.map prod.snd vs) bd'
+| [sym x, t, bd] := 
+  do v ← return $ mk_local_const_placeholder x,
+     bd' ← pexpr_of_mmexpr (env.insert x v) (app (sym "Implies") [t,bd]),
+     return $ mk_pi' v bd'
 | _ := failed
 end⟩
 

@@ -1,3 +1,5 @@
+(* ::Package:: *)
+
 LeanName[s_String] := LeanNameMkString[s, LeanNameAnonymous];
 LeanName[s_String, t_String] := LeanNameMkString[t, LeanName[s]];
 LeanName[i_Int] := LeanNameMkNum[i, LeanNameAnonymous];
