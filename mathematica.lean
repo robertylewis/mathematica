@@ -170,29 +170,6 @@ else do
 meta def execute_and_eval (cmd : string) : tactic mmexpr :=
 execute cmd >>= parse_mmexpr_tac
 
-
---run_cmd execute_and_eval "Directory[]" >>= trace
---run_cmd trace $  mathematica.form_of_expr ↑`(5)
---run_cmd trace $ (quote_string) (mathematica.form_of_expr ↑`(2) ++ "// LeanForm // Activate")
-
-/-run_cmd execute (mathematica.form_of_expr ↑`(2) ++ "// LeanForm // Activate") >>= trace
-variable x : ℤ
-include x
-example : true := by do
-e ← to_expr ```(x*x - 2*x + 1),
---trace e.to_raw_fmt,
- execute_and_eval (mathematica.form_of_expr e ++ "// LeanForm // Activate // Factor") >>= trace,
-triv-/
-
-
-/-run_cmd execute "$ProcessID" >>= trace
-run_cmd execute "Solve[x^2-2x+1==0]" >>= trace
-run_cmd execute "Solve[x^2-2x+1==0]" >>= trace
-run_cmd execute "Solve[x^2-2x+1==0]" >>= trace
-run_cmd execute "Solve[x^2-2x+1==0]" >>= trace
-run_cmd execute "Solve[x^2-2x+1==0]" >>= trace
-run_cmd execute "$ProcessID" >>= trace-/
-
 /--
 execute_global str evaluates str in Mathematica.
 The evaluation happens in the global context; declarations that are made during
@@ -210,23 +187,9 @@ do s ← run_io $ λ i, @io.cmd i {cmd := "pwd"},
 end mathematica
 end tactic
 
+
 namespace mathematica
 open mmexpr tactic
-
-/-meta def mmexpr_list_to_format (f : mmexpr → format) : list mmexpr → format
-| []       := to_fmt ""
-| [h]      := f h
-| (h :: t) := f h ++ ", " ++ mmexpr_list_to_format t
-
-meta def mmexpr_to_format : mmexpr → format
-| (sym s)     := to_fmt s
-| (mstr s)     := to_fmt "\"" ++ to_fmt s ++ "\""
-| (mint i)    := to_fmt i
-| (app e1 ls) := mmexpr_to_format e1 ++ to_fmt "[" ++ mmexpr_list_to_format mmexpr_to_format ls ++ to_fmt "]"
-| (mreal r)   := to_fmt r 
-
-
-meta instance : has_to_format mmexpr := ⟨mmexpr_to_format⟩-/
 
 
 private meta def pexpr_mk_app : pexpr → list pexpr → pexpr
@@ -275,34 +238,34 @@ private meta def mk_app_trans_expr_unkeyed_db (l : list name) :
      tactic (list (trans_env → mmexpr → list mmexpr → tactic expr)) :=
 monad.mapm (λ n, mk_const n >>= eval_expr app_trans_expr_unkeyed_rule) l
 
+@[user_attribute]
 private meta def sym_to_pexpr_rule : caching_user_attribute (rb_lmap string pexpr) :=
 ⟨⟨`sym_to_pexpr, "rule for translating a mmexpr.sym to a pexpr"⟩, mk_sym_trans_pexpr_db, []⟩ 
 
+@[user_attribute]
 private meta def sym_to_expr_rule : caching_user_attribute (rb_lmap string expr) :=
 ⟨⟨`sym_to_expr, "rule for translating a mmexpr.sym to a expr"⟩, mk_sym_trans_expr_db, []⟩ 
 
+@[user_attribute]
 private meta def app_to_pexpr_keyed_rule : 
 caching_user_attribute (rb_lmap string (trans_env → list mmexpr → tactic pexpr)) :=
 ⟨⟨`app_to_pexpr_keyed, "rule for translating a mmexpr.app to a pexpr"⟩, mk_app_trans_pexpr_keyed_db, []⟩ 
 
+@[user_attribute]
 private meta def app_to_expr_keyed_rule : 
 caching_user_attribute (rb_lmap string (trans_env → list mmexpr → tactic expr)) :=
 ⟨⟨`app_to_expr_keyed, "rule for translating a mmexpr.app to a expr"⟩, mk_app_trans_expr_keyed_db, []⟩ 
 
+@[user_attribute]
 private meta def app_to_pexpr_unkeyed_rule : 
 caching_user_attribute (list (trans_env → mmexpr → list mmexpr → tactic pexpr)) :=
 ⟨⟨`app_to_pexpr_unkeyed, "rule for translating a mmexpr.app to a pexpr"⟩, mk_app_trans_pexpr_unkeyed_db, []⟩ 
 
+@[user_attribute]
 private meta def app_to_expr_unkeyed_rule : 
 caching_user_attribute (list (trans_env → mmexpr → list mmexpr → tactic expr)) :=
 ⟨⟨`app_to_expr_unkeyed, "rule for translating a mmexpr.app to a expr"⟩, mk_app_trans_expr_unkeyed_db, []⟩ 
 
-run_cmd attribute.register ``sym_to_pexpr_rule
-run_cmd attribute.register ``sym_to_expr_rule
-run_cmd attribute.register ``app_to_pexpr_keyed_rule
-run_cmd attribute.register ``app_to_expr_keyed_rule
-run_cmd attribute.register ``app_to_pexpr_unkeyed_rule
-run_cmd attribute.register ``app_to_expr_unkeyed_rule
 
 private meta def expr_of_mmexpr_app_keyed (env : trans_env) : mmexpr → list mmexpr → tactic expr
 | (sym hd) args :=
