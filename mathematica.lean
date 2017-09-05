@@ -517,12 +517,12 @@ meta def list_to_pexpr : app_trans_pexpr_keyed_rule :=
 @[app_to_pexpr_keyed]
 meta def and_to_pexpr : app_trans_pexpr_keyed_rule :=
 ⟨"And", 
-λ env args, do args' ← monad.for args (pexpr_of_mmexpr env), return $ pexpr_fold_op ```(true) ```(and) args'⟩
+λ env args, do args' ← list.mfor args (pexpr_of_mmexpr env), return $ pexpr_fold_op ```(true) ```(and) args'⟩
 
 @[app_to_pexpr_keyed]
 meta def or_to_pexpr : app_trans_pexpr_keyed_rule :=
 ⟨"Or", 
-λ env args, do args' ← monad.for args (pexpr_of_mmexpr env), return $ pexpr_fold_op ```(false) ```(or) args'⟩
+λ env args, do args' ← list.mfor args (pexpr_of_mmexpr env), return $ pexpr_fold_op ```(false) ```(or) args'⟩
 
 @[app_to_pexpr_keyed]
 meta def not_to_pexpr : app_trans_pexpr_keyed_rule :=
@@ -610,7 +610,7 @@ meta def forall_to_pexpr : app_trans_pexpr_keyed_rule :=
      bd' ← pexpr_of_mmexpr (env.insert x v) bd,
      return $ mk_pi' v bd' 
 | [app (sym "List") l, bd] :=
-  do vs ← monad.for l sym_to_lcp,
+  do vs ← list.mfor l sym_to_lcp,
      bd' ← pexpr_of_mmexpr (env.insert_list vs) bd,
      return $ mk_pis (list.map prod.snd vs) bd'
 | [sym x, t, bd] := 
