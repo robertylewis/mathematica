@@ -269,42 +269,54 @@ private meta def mk_app_trans_expr_unkeyed_db (l : list name) :
 monad.mapm (λ n, mk_const n >>= eval_expr app_trans_expr_unkeyed_rule) l
 
 @[user_attribute]
-private meta def sym_to_pexpr_rule : caching_user_attribute (rb_lmap string pexpr) :=
-⟨⟨`sym_to_pexpr, "rule for translating a mmexpr.sym to a pexpr", none, none⟩, mk_sym_trans_pexpr_db, []⟩ 
+private meta def sym_to_pexpr_rule : user_attribute (rb_lmap string pexpr) unit :=
+{ name := `sym_to_pexpr, 
+  descr := "rule for translating a mmexpr.sym to a pexpr",
+  cache_cfg := ⟨mk_sym_trans_pexpr_db, []⟩ }
 
 @[user_attribute]
-private meta def sym_to_expr_rule : caching_user_attribute (rb_lmap string expr) :=
-⟨⟨`sym_to_expr, "rule for translating a mmexpr.sym to a expr", none, none⟩, mk_sym_trans_expr_db, []⟩ 
+private meta def sym_to_expr_rule : user_attribute (rb_lmap string expr) unit :=
+{ name := `sym_to_expr, 
+  descr := "rule for translating a mmexpr.sym to a expr", 
+  cache_cfg := ⟨mk_sym_trans_expr_db, []⟩ }
 
 @[user_attribute]
 private meta def app_to_pexpr_keyed_rule : 
-caching_user_attribute (rb_lmap string (trans_env → list mmexpr → tactic pexpr)) :=
-⟨⟨`app_to_pexpr_keyed, "rule for translating a mmexpr.app to a pexpr", none, none⟩, mk_app_trans_pexpr_keyed_db, []⟩ 
+        user_attribute (rb_lmap string (trans_env → list mmexpr → tactic pexpr)) :=
+{ name := `app_to_pexpr_keyed, 
+  descr := "rule for translating a mmexpr.app to a pexpr",
+  cache_cfg := ⟨mk_app_trans_pexpr_keyed_db, []⟩ } 
 
 @[user_attribute]
 private meta def app_to_expr_keyed_rule : 
-caching_user_attribute (rb_lmap string (trans_env → list mmexpr → tactic expr)) :=
-⟨⟨`app_to_expr_keyed, "rule for translating a mmexpr.app to a expr", none, none⟩, mk_app_trans_expr_keyed_db, []⟩ 
+        user_attribute (rb_lmap string (trans_env → list mmexpr → tactic expr)) :=
+{ name := `app_to_expr_keyed, 
+  descr := "rule for translating a mmexpr.app to a expr",
+  cache_cfg := ⟨mk_app_trans_expr_keyed_db, []⟩ }
 
 @[user_attribute]
 private meta def app_to_pexpr_unkeyed_rule : 
-caching_user_attribute (list (trans_env → mmexpr → list mmexpr → tactic pexpr)) :=
-⟨⟨`app_to_pexpr_unkeyed, "rule for translating a mmexpr.app to a pexpr", none, none⟩, mk_app_trans_pexpr_unkeyed_db, []⟩ 
+        user_attribute (list (trans_env → mmexpr → list mmexpr → tactic pexpr)) :=
+{ name := `app_to_pexpr_unkeyed, 
+  descr := "rule for translating a mmexpr.app to a pexpr",
+  cache_cfg := ⟨mk_app_trans_pexpr_unkeyed_db, []⟩ }
 
 @[user_attribute]
 private meta def app_to_expr_unkeyed_rule : 
-caching_user_attribute (list (trans_env → mmexpr → list mmexpr → tactic expr)) :=
-⟨⟨`app_to_expr_unkeyed, "rule for translating a mmexpr.app to a expr", none, none⟩, mk_app_trans_expr_unkeyed_db, []⟩ 
+        user_attribute (list (trans_env → mmexpr → list mmexpr → tactic expr)) :=
+{ name := `app_to_expr_unkeyed, 
+  descr := "rule for translating a mmexpr.app to a expr",
+  cache_cfg := ⟨mk_app_trans_expr_unkeyed_db, []⟩ }
 
 
 private meta def expr_of_mmexpr_app_keyed (env : trans_env) : mmexpr → list mmexpr → tactic expr
 | (sym hd) args :=
-  do expr_db ← caching_user_attribute.get_cache app_to_expr_keyed_rule,
+  do expr_db ← app_to_expr_keyed_rule.get_cache,
      tactic.first $ (find expr_db hd).for $ λ f, f env args
 | _ _ := failed
 
 private meta def expr_of_mmexpr_app_unkeyed (env : trans_env) (hd : mmexpr) (args : list mmexpr) : tactic expr :=
-do expr_db ← caching_user_attribute.get_cache app_to_expr_unkeyed_rule,
+do expr_db ← app_to_expr_unkeyed_rule.get_cache,
    tactic.first (list.map (λ f : trans_env → mmexpr → list mmexpr → tactic expr, f env hd args) expr_db)
 
 private meta def expr_of_mmexpr_app_decomp (env : trans_env) (expr_of_mmexpr : trans_env → mmexpr → tactic expr)
@@ -321,13 +333,13 @@ expr_of_mmexpr_app_decomp env expr_of_mmexpr m l
 
 private meta def pexpr_of_mmexpr_app_keyed (env : trans_env) : mmexpr → list mmexpr → tactic pexpr
 | (sym hd) args := 
-  do expr_db ← caching_user_attribute.get_cache app_to_pexpr_keyed_rule,
+  do expr_db ← app_to_pexpr_keyed_rule.get_cache,
      tactic.first $ (find expr_db hd).for $ λ f, f env args
 | _ _ := failed
 
 
 private meta def pexpr_of_mmexpr_app_unkeyed (env : trans_env) (hd : mmexpr) (args : list mmexpr) : tactic pexpr := 
-do expr_db ← caching_user_attribute.get_cache app_to_pexpr_unkeyed_rule,
+do expr_db ← app_to_pexpr_unkeyed_rule.get_cache,
    tactic.first (list.map (λ f : trans_env → mmexpr → list mmexpr → tactic pexpr, f env hd args) expr_db)
 
 private meta def pexpr_of_mmexpr_app_decomp (env : trans_env) (pexpr_of_mmexpr : trans_env → mmexpr → tactic pexpr)
@@ -354,7 +366,7 @@ the attribute manager. env maps symbols (representing bound variables) to placeh
 -/
 meta def expr_of_mmexpr : trans_env → mmexpr → tactic expr
 | env (sym s)       := find_in_env env s <|> 
-  do expr_db ← caching_user_attribute.get_cache sym_to_expr_rule,
+  do expr_db ← sym_to_expr_rule.get_cache,
      match find expr_db s with
      | (h :: t) := return h
      | []       := fail ("Couldn't find translation for sym \"" ++ s ++ "\"")
@@ -367,7 +379,7 @@ meta def expr_of_mmexpr : trans_env → mmexpr → tactic expr
 private meta def pexpr_of_mmexpr_aux (env : trans_env) 
          (pexpr_of_mmexpr : trans_env → mmexpr → tactic pexpr) :  mmexpr → tactic pexpr
 | (sym s)   := 
-  do expr_db ← caching_user_attribute.get_cache sym_to_pexpr_rule,
+  do expr_db ← sym_to_pexpr_rule.get_cache,
      match find expr_db s with
      | (h :: t) := return h
      | []       := fail ("Couldn't find translation for sym \"" ++ s ++ "\"")
