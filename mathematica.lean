@@ -617,6 +617,17 @@ end⟩
 meta def rat_to_pexpr : sym_trans_pexpr_rule :=
 ⟨"Rational", ```(has_div.div)⟩ 
 
+@[sym_to_pexpr]
+meta def eq_to_pexpr : sym_trans_pexpr_rule :=
+⟨"Equal", ```(eq)⟩
+
+@[sym_to_expr]
+meta def true_to_expr : sym_trans_expr_rule :=
+⟨"True", `(true)⟩
+
+@[sym_to_pexpr]
+meta def false_to_expr : sym_trans_expr_rule :=
+⟨"False", `(false)⟩
 
 end transl_expr_instances
 end mathematica
