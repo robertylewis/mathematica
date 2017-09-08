@@ -296,17 +296,10 @@ private meta def expr_of_mmexpr_app_unkeyed (env : trans_env) (hd : mmexpr) (arg
 do expr_db ← app_to_expr_unkeyed_rule.get_cache,
    tactic.first (list.map (λ f : trans_env → mmexpr → list mmexpr → tactic expr, f env hd args) expr_db)
 
-private meta def expr_of_mmexpr_app_decomp (env : trans_env) (expr_of_mmexpr : trans_env → mmexpr → tactic expr)
-         (hd : mmexpr) (args : list mmexpr) : tactic expr := 
-do hs ← expr_of_mmexpr env hd,
-   args' ← monad.mapm (expr_of_mmexpr env) args,
-   return $ expr.mk_app hs args'
-
 private meta def expr_of_mmexpr_app (env : trans_env) (expr_of_mmexpr : trans_env → mmexpr → tactic expr)
          (m : mmexpr) (l : list mmexpr) : tactic expr :=
 expr_of_mmexpr_app_keyed env m l <|> 
-expr_of_mmexpr_app_unkeyed env m l <|> 
-expr_of_mmexpr_app_decomp env expr_of_mmexpr m l
+expr_of_mmexpr_app_unkeyed env m l
 
 private meta def pexpr_of_mmexpr_app_keyed (env : trans_env) : mmexpr → list mmexpr → tactic pexpr
 | (sym hd) args := 
