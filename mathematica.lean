@@ -177,12 +177,14 @@ else do
 meta def execute_and_eval (cmd : string) : tactic mmexpr :=
 execute cmd >>= parse_mmexpr_tac
 
+/- TODO(@rlewis1988): reimplement this
 /--
 execute_global str evaluates str in Mathematica.
 The evaluation happens in the global context; declarations that are made during
 evaluation will persist.
 -/
 meta constant execute_global : string → tactic expr
+-/
 
 /--
 Returns the path to {LEAN_ROOT}/extras/mathematica (TODO: FIX COMMENT)
@@ -664,6 +666,7 @@ meta def mk_get_cmd (path : string) : tactic string :=
 do s ← extras_path,
    return $ "Get[\"" ++ path ++ "\",Path->{DirectoryFormat[\""++ s ++"\"]}];"
 
+/- TODO (@rlewis1988): finish this
 /--
 load_file path will load the file found at path into Mathematica.
 The declarations will persist until the kernel is restarted.
@@ -671,6 +674,8 @@ The declarations will persist until the kernel is restarted.
 meta def load_file (path : string) : tactic unit :=
 do s ← mk_get_cmd path,
    execute_global s >> return ()
+-/
+
 
 /--
 run_command_on cmd e reflects e into Mathematica syntax, applies cmd to this reflection,
