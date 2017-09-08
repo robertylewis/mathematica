@@ -245,45 +245,56 @@ private meta def mk_app_trans_expr_unkeyed_db (l : list name) :
      tactic (list (trans_env → mmexpr → list mmexpr → tactic expr)) :=
 monad.mapm (λ n, mk_const n >>= eval_expr app_trans_expr_unkeyed_rule) l
 
+meta def ensure_has_type (e : expr) : name → nat → bool → command :=
+λ decl_name _ _,
+do dcl ← get_decl decl_name,
+   is_def_eq e (dcl.type)
+
 @[user_attribute]
 private meta def sym_to_pexpr_rule : user_attribute (rb_lmap string pexpr) unit :=
 { name := `sym_to_pexpr, 
   descr := "rule for translating a mmexpr.sym to a pexpr",
-  cache_cfg := ⟨mk_sym_trans_pexpr_db, []⟩ }
+  cache_cfg := ⟨mk_sym_trans_pexpr_db, []⟩,
+  after_set := ensure_has_type `(sym_trans_pexpr_rule) }
 
 @[user_attribute]
 private meta def sym_to_expr_rule : user_attribute (rb_lmap string expr) unit :=
 { name := `sym_to_expr, 
   descr := "rule for translating a mmexpr.sym to a expr", 
-  cache_cfg := ⟨mk_sym_trans_expr_db, []⟩ }
+  cache_cfg := ⟨mk_sym_trans_expr_db, []⟩,
+  after_set := ensure_has_type `(sym_trans_expr_rule) }
 
 @[user_attribute]
 private meta def app_to_pexpr_keyed_rule : 
         user_attribute (rb_lmap string (trans_env → list mmexpr → tactic pexpr)) :=
 { name := `app_to_pexpr_keyed, 
   descr := "rule for translating a mmexpr.app to a pexpr",
-  cache_cfg := ⟨mk_app_trans_pexpr_keyed_db, []⟩ } 
+  cache_cfg := ⟨mk_app_trans_pexpr_keyed_db, []⟩,
+  after_set := ensure_has_type `(app_trans_pexpr_keyed_rule) } 
 
 @[user_attribute]
 private meta def app_to_expr_keyed_rule : 
         user_attribute (rb_lmap string (trans_env → list mmexpr → tactic expr)) :=
 { name := `app_to_expr_keyed, 
   descr := "rule for translating a mmexpr.app to a expr",
-  cache_cfg := ⟨mk_app_trans_expr_keyed_db, []⟩ }
+  cache_cfg := ⟨mk_app_trans_expr_keyed_db, []⟩,
+  after_set := ensure_has_type `(app_trans_expr_keyed_rule) }
 
 @[user_attribute]
 private meta def app_to_pexpr_unkeyed_rule : 
         user_attribute (list (trans_env → mmexpr → list mmexpr → tactic pexpr)) :=
 { name := `app_to_pexpr_unkeyed, 
   descr := "rule for translating a mmexpr.app to a pexpr",
-  cache_cfg := ⟨mk_app_trans_pexpr_unkeyed_db, []⟩ }
+  cache_cfg := ⟨mk_app_trans_pexpr_unkeyed_db, []⟩,
+  after_set := ensure_has_type `(app_trans_pexpr_unkeyed_rule) }
 
 @[user_attribute]
 private meta def app_to_expr_unkeyed_rule : 
         user_attribute (list (trans_env → mmexpr → list mmexpr → tactic expr)) :=
 { name := `app_to_expr_unkeyed, 
   descr := "rule for translating a mmexpr.app to a expr",
-  cache_cfg := ⟨mk_app_trans_expr_unkeyed_db, []⟩ }
+  cache_cfg := ⟨mk_app_trans_expr_unkeyed_db, []⟩,
+  after_set := ensure_has_type `(app_trans_expr_unkeyed_rule) }
 
 
 private meta def expr_of_mmexpr_app_keyed (env : trans_env) : mmexpr → list mmexpr → tactic expr
