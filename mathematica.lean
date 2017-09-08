@@ -637,7 +637,7 @@ meta def eq_to_pexpr : sym_trans_pexpr_rule :=
 meta def true_to_expr : sym_trans_expr_rule :=
 ⟨"True", `(true)⟩
 
-@[sym_to_pexpr]
+@[sym_to_expr]
 meta def false_to_expr : sym_trans_expr_rule :=
 ⟨"False", `(false)⟩
 
