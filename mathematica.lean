@@ -563,8 +563,29 @@ meta def hold_to_pexpr : app_trans_pexpr_keyed_rule :=
 ⟨"Hold",
 λ env args, match args with
  | [h] := pexpr_of_mmexpr env h
- | l   := pexpr_of_mmexpr env (app (sym "Sequence") l)
+ | _ := failed
  end⟩
+
+private meta def replace_holds : mmexpr → list mmexpr
+| (app (sym "Hold") l) := l
+| m := [m]
+
+meta def is_hold : mmexpr → bool
+| (app (sym "Hold") l) := tt
+| _ := ff
+
+/--
+ F[Hold[a1, ..., an]] is equivalent to F[a1, ..., an].
+ F[t1, ..., Hold[p, q], ..., tn] is equivalent to F[t1, ..., p, q, ..., tn]
+-/
+@[app_to_pexpr_unkeyed]
+meta def app_mvar_hold_to_pexpr : app_trans_pexpr_unkeyed_rule
+| env head [app (sym "Hold") l] := pexpr_of_mmexpr env (app head l)
+| env head l :=
+   if l.any is_hold then 
+     let ls := (l.map replace_holds).join in pexpr_of_mmexpr env (app head ls)
+   else failed
+
 
 meta def pexpr.to_raw_expr : pexpr → expr
 | (var n)                     := var n
