@@ -558,6 +558,14 @@ meta def implies_to_pexpr : app_trans_pexpr_keyed_rule :=
  | _   := failed
  end⟩
 
+@[app_to_pexpr_keyed]
+meta def hold_to_pexpr : app_trans_pexpr_keyed_rule :=
+⟨"Hold",
+λ env args, match args with
+ | [h] := pexpr_of_mmexpr env h
+ | l   := pexpr_of_mmexpr env (app (sym "Sequence") l)
+ end⟩
+
 meta def pexpr.to_raw_expr : pexpr → expr
 | (var n)                     := var n
 | (sort l)                    := sort l
