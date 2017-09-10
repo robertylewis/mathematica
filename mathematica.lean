@@ -365,7 +365,7 @@ private meta def pexpr_of_mmexpr_aux (env : trans_env)
   do expr_db ← sym_to_pexpr_rule.get_cache,
      match find expr_db s with
      | (h :: t) := return h
-     | []       := resolve_name s <|> fail ("Couldn't find translation for sym \"" ++ s ++ "\"")
+     | []       := parse_name_tac s >>= resolve_name <|> fail ("Couldn't find translation for sym \"" ++ s ++ "\"")
      end
 | (mint i ) := return $ pexpr_of_int i
 | (app hd args) := pexpr_of_mmexpr_app env pexpr_of_mmexpr hd args 

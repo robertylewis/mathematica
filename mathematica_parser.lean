@@ -150,6 +150,20 @@ match parser.run parse_mmexpr ((strip_trailing_whitespace_cb ∘ mk_mono_cb) s) 
 | sum.inl error := tactic.fail error
 end
 
+def parse_name : parser (list string) := 
+do l ← sep_by (ch '.') (many $ sat ((≠) '.')),
+   return $ (l.map list.as_string).reverse
+
+def mk_name_using : list string → name
+| []       := name.anonymous
+| (s :: l) := mk_str_name (mk_name_using l) s
+
+meta def parse_name_tac (s : string) : tactic name :=
+match parser.run_string parse_name s with
+| sum.inr ls := return $ mk_name_using ls
+| sum.inl error := tactic.fail error
+end
+
 /-meta def parse_mmexpr_tac (s : char_buffer) : tactic mmexpr :=
 (do sum.inr mme ← return $ parser.run parse_mmexpr ((strip_trailing_whitespace_cb ∘ mk_mono_cb) s),
    return mme)
