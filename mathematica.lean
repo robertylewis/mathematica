@@ -586,6 +586,11 @@ meta def app_mvar_hold_to_pexpr : app_trans_pexpr_unkeyed_rule
      let ls := (l.map replace_holds).join in pexpr_of_mmexpr env (app head ls)
    else failed
 
+@[app_to_pexpr_unkeyed]
+meta def app_inactive_to_pexpr : app_trans_pexpr_unkeyed_rule
+| env (app (sym "Inactive") [t]) l := pexpr_of_mmexpr env (app t l)
+| _ _ _ := failed
+
 
 meta def pexpr.to_raw_expr : pexpr → expr
 | (var n)                     := var n
