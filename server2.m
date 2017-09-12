@@ -1,5 +1,13 @@
 (* ::Package:: *)
 
+
+$ContextPath = Append[$ContextPath,"MyGlobalContext`"];
+$Context = "MyGlobalContext`";
+cctr = 0;
+mgc = "MyGlobalContext`";
+ClearAll["Global`*"];
+
+
 << "SocketLink`"
 << "lean_form.m"
 
@@ -11,12 +19,6 @@ ToWindowsDir[s_String] :=
 DirectoryFormat[s_String] := 
  If[WindowsDirQ[Directory[]], ToWindowsDir[s], s]
 
-
-$ContextPath = Append[$ContextPath,"MyGlobalContext`"];
-$Context = "MyGlobalContext`";
-cctr = 0;
-mgc = "MyGlobalContext`";
-ClearAll["Global`*"];
 
 CreateAsynchronousServer[CreateServerSocket[10000], Handler]
 
