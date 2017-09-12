@@ -163,9 +163,9 @@ execute str evaluates str in Mathematica.
 The evaluation happens in a unique context; declarations that are made during
 evaluation will not be available in future evaluations.
 -/
-meta def execute (cmd : string) : tactic char_buffer :=
+meta def execute (cmd : string) (add_args : list string := []) : tactic char_buffer :=
 let cmd' := escape_term cmd ++ "&!",
-    args := ["_target/deps/mathematica/client2.py"] in
+    args := ["_target/deps/mathematica/client2.py"].append add_args in
 if cmd'.length < 2040 then
   tactic.run_io  (λ i, @io.buffer_cmd i { cmd := "python2", args := args.append [escape_quotes cmd'] })
 else do 
@@ -177,14 +177,13 @@ else do
 meta def execute_and_eval (cmd : string) : tactic mmexpr :=
 execute cmd >>= parse_mmexpr_tac
 
-/- TODO(@rlewis1988): reimplement this
 /--
 execute_global str evaluates str in Mathematica.
 The evaluation happens in the global context; declarations that are made during
 evaluation will persist.
 -/
-meta constant execute_global : string → tactic expr
--/
+meta def execute_global (cmd : string) : tactic char_buffer :=
+execute cmd ["-g"]
 
 /--
 Returns the path to {LEAN_ROOT}/extras/mathematica (TODO: FIX COMMENT)
@@ -700,7 +699,6 @@ meta def mk_get_cmd (path : string) : tactic string :=
 do s ← extras_path,
    return $ "Get[\"" ++ path ++ "\",Path->{DirectoryFormat[\""++ s ++"\"]}];"
 
-/- TODO (@rlewis1988): finish this
 /--
 load_file path will load the file found at path into Mathematica.
 The declarations will persist until the kernel is restarted.
@@ -708,7 +706,7 @@ The declarations will persist until the kernel is restarted.
 meta def load_file (path : string) : tactic unit :=
 do s ← mk_get_cmd path,
    execute_global s >> return ()
--/
+
 
 
 /--
