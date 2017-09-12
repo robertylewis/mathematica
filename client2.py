@@ -1,12 +1,49 @@
 import socket
 import sys
+import subprocess
 import os
 import argparse
+import time
+import threading
 
-def process(s, is_global):
+DETACHED_PROCESS = 0x00000008
+
+class ServerThread(threading.Thread):
+    def run(self):
+        #fnull=open(os.devnull,'w')
+        #subprocess.Popen(["math", "--noprompt", "-run", '"<<\"~/Dropbox/lean/mathematica/server2.m\""']
+                           # ,stdout=fnull, stdin=fnull, stderr=fnull
+                            #)
+        os.system('math --noprompt -run "<<server2.m" > /dev/null')
+
+        
+def restart_server():
+    fnull=open(os.devnull,'w')
+    t = ServerThread()
+    t.daemon=True
+    t.start()
+#    return subprocess.Popen(["math", "--noprompt", "-run", '"<<\"~/Dropbox/lean/mathematica/server2.m\""']
+#                            ,stdout=fnull#, stdin=fnull, stderr=fnull
+#    )
+
+
+def process(s, is_global, start_server):
     sep = ' '
     clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    clientsocket.connect(('localhost', 10000))
+    try:
+        clientsocket.connect(('localhost', 10000))
+    except socket.error as e:
+        time.sleep(.2)
+        print "error", e
+        if start_server:
+            print "restarting server"
+            pid = restart_server()
+           # print pid.pid
+            time.sleep(.5)
+           # print pid.poll()
+            clientsocket.connect(('localhost', 10000))
+        else:
+            return
     clientsocket.send(s + ("1" if is_global else "0"))
     buf = ''
     while sep not in buf:
@@ -31,11 +68,15 @@ def read_from_file(path):
 parser = argparse.ArgumentParser(description="Communicate with Mathematica.")
 parser.add_argument('-f', action='store_true') # file 
 parser.add_argument('-g', action='store_true') # global
+parser.add_argument('-b', action='store_true') # attempt to talk but don't start server
+parser.add_argument('-s', action='store_true') # only attempt to start server
 parser.add_argument('cmd')
 args = parser.parse_args()
 
-if args.f:
-    process(read_from_file(args.cmd), args.g)
+if args.s:
+    restart_server()
+elif args.f:
+    process(read_from_file(args.cmd), args.g, not args.b)
 else:
-    process(args.cmd, args.g)
+    process(args.cmd, args.g, not args.b)
 

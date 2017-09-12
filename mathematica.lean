@@ -186,7 +186,7 @@ meta def execute_global (cmd : string) : tactic char_buffer :=
 execute cmd ["-g"]
 
 /--
-Returns the path to {LEAN_ROOT}/extras/mathematica (TODO: FIX COMMENT)
+Returns the path to {run_directory}/extras/
 -/
 meta def extras_path : tactic string :=
 do s ← run_io $ λ i, @io.cmd i {cmd := "pwd"},
