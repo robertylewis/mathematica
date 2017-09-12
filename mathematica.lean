@@ -167,7 +167,7 @@ meta def execute (cmd : string) (add_args : list string := []) : tactic char_buf
 let cmd' := escape_term cmd ++ "&!",
     args := ["_target/deps/mathematica/client2.py"].append add_args in
 if cmd'.length < 2040 then
-  tactic.run_io  (λ i, @io.buffer_cmd i { cmd := "python2", args := args.append [escape_quotes cmd'] })
+  tactic.run_io  (λ i, @io.buffer_cmd i { cmd := "python2", args := args.append [/-escape_quotes -/cmd'] })
 else do 
    path ← mathematica.temp_file_name "exch",
    tactic.run_io (λ i, @write_file i path cmd' io.mode.write),
@@ -697,8 +697,9 @@ open mathematica
 
 meta def mk_get_cmd (path : string) : tactic string :=
 do s ← extras_path,
+--   return $ "Get[\"" ++ path ++ "\",Path->{DirectoryFormat[\""++ s ++"\"]}];"
    return $ "Get[\"" ++ path ++ "\",Path->{DirectoryFormat[\""++ s ++"\"]}];"
-
+run_cmd do s ← mk_get_cmd "bessel.m", trace $ repr s
 /--
 load_file path will load the file found at path into Mathematica.
 The declarations will persist until the kernel is restarted.
