@@ -174,8 +174,8 @@ LeanForm[LeanLambda[nm_, bi_, tp_, bd_], v_] :=
     
 LeanForm[LeanVar[i_], v_] := If[Length[v]>i,v[[i+1]],LeanVar[i]]
 
-LeanForm[LeanApp[LeanLambda[nm_, bi_, tp_, bd_], e_], v_] := 
- LeanForm[LeanLambda[nm, bi, tp, bd], v][LeanForm[e]]
+  (*LeanForm[LeanApp[LeanLambda[nm_, bi_, tp_, bd_], e_], v_] := 
+   LeanForm[LeanLambda[nm, bi, tp, bd], v][LeanForm[e,v]]*)
 
 
 
