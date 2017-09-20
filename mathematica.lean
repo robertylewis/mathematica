@@ -699,7 +699,7 @@ meta def mk_get_cmd (path : string) : tactic string :=
 do s ← extras_path,
 --   return $ "Get[\"" ++ path ++ "\",Path->{DirectoryFormat[\""++ s ++"\"]}];"
    return $ "Get[\"" ++ path ++ "\",Path->{DirectoryFormat[\""++ s ++"\"]}];"
-run_cmd do s ← mk_get_cmd "bessel.m", trace $ repr s
+
 /--
 load_file path will load the file found at path into Mathematica.
 The declarations will persist until the kernel is restarted.
