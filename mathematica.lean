@@ -631,6 +631,22 @@ meta def forall_to_pexpr : app_trans_pexpr_keyed_rule :=
 | _ := failed
 end⟩
 
+#check mk_exists_lst
+
+@[app_to_pexpr_keyed]
+meta def exists_to_pexpr : app_trans_pexpr_keyed_rule :=
+⟨"Exists",
+λ env args, match args with
+| [sym x, bd] := 
+  do v ← return $ mk_local_const_placeholder x, 
+     bd' ← pexpr_of_mmexpr (env.insert x v) bd,
+     lm ← return $ mk_lambda' v bd',
+     return ``(Exists %%lm) 
+| [app (sym "List") [], bd] := pexpr_of_mmexpr env bd
+| [app (sym "List") (h::t), bd] := pexpr_of_mmexpr env (app (sym "Exists") [h, app (sym "Exists") [app (sym "List") t, bd]])
+| _ := failed
+end⟩
+
 @[sym_to_pexpr]
 meta def rat_to_pexpr : sym_trans_pexpr_rule :=
 ⟨"Rational", ```(has_div.div)⟩ 
