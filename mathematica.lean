@@ -663,6 +663,23 @@ meta def true_to_expr : sym_trans_expr_rule :=
 meta def false_to_expr : sym_trans_expr_rule :=
 ⟨"False", `(false)⟩
 
+
+@[sym_to_pexpr]
+meta def less_to_pexpr : mathematica.sym_trans_pexpr_rule :=
+⟨"Less", ``(has_lt.lt)⟩
+
+@[sym_to_pexpr]
+meta def greater_to_pexpr : mathematica.sym_trans_pexpr_rule :=
+⟨"Greater", ``(gt)⟩
+
+@[sym_to_pexpr]
+meta def lesseq_to_pexpr : mathematica.sym_trans_pexpr_rule :=
+⟨"LessEqual", ``(has_le.le)⟩
+
+@[sym_to_pexpr]
+meta def greatereq_to_pexpr : mathematica.sym_trans_pexpr_rule :=
+⟨"GreaterEqual", ``(ge)⟩
+
 end transl_expr_instances
 end mathematica
 
