@@ -93,37 +93,6 @@ meta def form_of_expr : expr → string
 | (macro mdf mlst)           := "LeanMacro"
 
 /-
-These functions are difficult to implement without a monad map over expr. 
-The problem: macros can be definitionally equal but have different meanings.
-So we need to replace them in an expr as soon as we encounter them, which involves
-generating a fresh name.
-
-section
-open tactic
-
-meta def is_macro : expr → bool
-| (macro _ _ _) := tt
-| _             := ff
-
-meta def find_macros (e : expr) : rb_set expr :=
-e^.fold (rb_map.mk _ _) (λ ex _ map, if is_macro ex then map^.insert ex else map)
-
-meta def {u} flip_pair_list {α : Type u} (l : list (α × α)) : list (α × α) :=
-l^.map (λ ⟨p1, p2⟩, ⟨p2, p1⟩)
-
-meta def remove_macros (e : expr) : tactic (expr × rb_map expr expr) :=
-do ls ← (find_macros e)^.mfold [] (λ ex l, do mv ← infer_type ex >>= mk_meta_var, return ((ex, mv)::l)),
-   replmap ← return $ rb_map.of_list ls,
-   e' ← return $ e^.replace (λ ex _, replmap^.find ex),
-   return (e', rb_map.of_list $ flip_pair_list ls)
-
-meta def reinsert_macros (e : expr) (map : rb_map expr expr) : expr :=
-e^.replace (λ ex _, map^.find ex)
-
---meta def reinsert_macros_in_mmexpr (m : mmexpr) (map : rb_map expr expr) : expr := sorry
--/
-
-/-
   The following definitions are used to make pexprs out of various types.
 -/
 end mathematica
@@ -137,15 +106,6 @@ meta def pexpr_of_int : int → pexpr
 | (int.of_nat n) := pexpr_of_nat n
 | (int.neg_succ_of_nat n) := ```(-%%(pexpr_of_nat (n+1)))
 
-/-
-The type mmexpr reflects Mathematica expression syntax.
--/
-/-inductive mmexpr : Type
-| sym   : string → mmexpr
-| mstr  : string → mmexpr
-| mint  : int → mmexpr 
-| app   : mmexpr → list mmexpr → mmexpr
-| mreal : float → mmexpr -/
 
 namespace tactic
 namespace mathematica
@@ -621,7 +581,7 @@ let t := pexpr.mk_placeholder in
 local_const n n binder_info.default (pexpr.to_raw_expr t)
 
 
-private meta def sym_to_lcp : mmexpr → tactic (string × expr)
+meta def sym_to_lcp : mmexpr → tactic (string × expr)
 | (sym s) := return $ (s, mk_local_const_placeholder s)
 | _ := failed
 

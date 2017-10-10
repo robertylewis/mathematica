@@ -6,17 +6,19 @@ meta def htfi : has_to_format ℤ := ⟨λ z, int.rec_on z (λ k, ↑k) (λ k, "
 local attribute [instance] htfi
 
 
-structure float :=
+structure mfloat :=
 (sign     : nat)
 (mantisa  : nat)
 (exponent : nat)
+
+local notation `float` := mfloat
 
 meta instance : has_to_format float :=
 ⟨λ f, to_fmt "(" ++ to_fmt f.sign ++ to_fmt ", " ++ 
       to_fmt f.mantisa ++ ", " ++ to_fmt f.exponent ++ to_fmt ")"⟩
 
 meta instance : has_reflect float | ⟨s, m, e⟩ :=
-((`(λ s' m' e', float.mk s' m' e').subst (nat.reflect s)).subst (nat.reflect m)).subst (nat.reflect e)
+((`(λ s' m' e', mfloat.mk s' m' e').subst (nat.reflect s)).subst (nat.reflect m)).subst (nat.reflect e)
 
 /--
 The type mmexpr reflects Mathematica expression syntax.
