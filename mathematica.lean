@@ -580,6 +580,13 @@ meta def mk_local_const_placeholder (n : name) : expr :=
 let t := pexpr.mk_placeholder in
 local_const n n binder_info.default (pexpr.to_raw_expr t)
 
+meta def mk_local_const (n : name) (tp : pexpr): expr :=
+local_const n n binder_info.default (pexpr.to_raw_expr tp)
+
+private meta def sym_to_lcs_using (env : trans_env) (e : mmexpr) : mmexpr → tactic (string × expr)
+| (sym s) := do p ← pexpr_of_mmexpr env e,
+                return $ (s, mk_local_const s p)
+| _ := failed
 
 meta def sym_to_lcp : mmexpr → tactic (string × expr)
 | (sym s) := return $ (s, mk_local_const_placeholder s)
@@ -631,7 +638,20 @@ meta def forall_to_pexpr : app_trans_pexpr_keyed_rule :=
 | _ := failed
 end⟩
 
-#check mk_exists_lst
+@[app_to_pexpr_keyed]
+meta def forall_typed_to_pexpr : app_trans_pexpr_keyed_rule :=
+⟨"ForAllTyped",
+λ env args, match args with
+| [sym x, t, bd] := 
+  do (n, pe) ← sym_to_lcs_using env t (sym x),
+     bd' ← pexpr_of_mmexpr (env.insert n pe) bd,
+     return $ mk_pi' pe bd'
+| [app (sym "List") l, t, bd] :=
+  do vs ← l.mfor (sym_to_lcs_using env t),
+     bd' ← pexpr_of_mmexpr (env.insert_list vs) bd,
+     return $ mk_pis (vs.map prod.snd) bd'
+| _ := failed
+end⟩
 
 @[app_to_pexpr_keyed]
 meta def exists_to_pexpr : app_trans_pexpr_keyed_rule :=
@@ -646,6 +666,32 @@ meta def exists_to_pexpr : app_trans_pexpr_keyed_rule :=
 | [app (sym "List") (h::t), bd] := pexpr_of_mmexpr env (app (sym "Exists") [h, app (sym "Exists") [app (sym "List") t, bd]])
 | _ := failed
 end⟩
+
+@[sym_to_pexpr]
+meta def type_to_pexpr : sym_trans_pexpr_rule :=
+⟨"Type", ```(Type)⟩
+
+@[sym_to_pexpr]
+meta def prop_to_pexpr : sym_trans_pexpr_rule :=
+⟨"Prop", ```(Prop)⟩
+
+
+@[sym_to_pexpr]
+meta def inter_to_pexpr : sym_trans_pexpr_rule :=
+⟨"SetInter", ```(has_inter.inter)⟩
+
+@[sym_to_pexpr]
+meta def union_to_pexpr : sym_trans_pexpr_rule :=
+⟨"SetUnion", ```(has_union.union)⟩
+
+@[sym_to_pexpr]
+meta def compl_to_pexpr : sym_trans_pexpr_rule :=
+⟨"SetCompl", ```(has_neg.neg)⟩
+
+@[sym_to_pexpr]
+meta def empty_to_pexpr : sym_trans_pexpr_rule :=
+⟨"EmptySet", ```(∅)⟩
+
 
 @[sym_to_pexpr]
 meta def rat_to_pexpr : sym_trans_pexpr_rule :=
