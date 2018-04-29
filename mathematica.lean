@@ -6,7 +6,7 @@ Author: Robert Y. Lewis
 
 
 import .mathematica_parser system.io
-open expr string level name binder_info
+open expr string level name binder_info native
 
 namespace list
 variables {α β : Type} 
@@ -19,7 +19,7 @@ mmap f l
 
 end list
 
-meta def rb_lmap.of_list {key : Type} {data : Type} [has_ordering key] : list (key × data) → rb_lmap key data
+meta def rb_lmap.of_list {key : Type} {data : Type} [has_lt key] [decidable_rel ((<) : key → key → Prop)] : list (key × data) → rb_lmap key data
 | []           := rb_lmap.mk key data
 | ((k, v)::ls) := rb_lmap.insert (rb_lmap.of_list ls) k v
 
@@ -111,11 +111,12 @@ namespace tactic
 namespace mathematica
 
 section
-variable [io.interface]
+
 def write_file (fn : string) (cnts : string) (mode := io.mode.write) : io unit := do
 h ← io.mk_file_handle fn io.mode.write,
 io.fs.write h cnts.to_char_buffer,
 io.fs.close h
+
 end
 
 /--
@@ -127,11 +128,11 @@ meta def execute (cmd : string) (add_args : list string := []) : tactic char_buf
 let cmd' := escape_term cmd ++ "&!",
     args := ["_target/deps/mathematica/client2.py"].append add_args in
 if cmd'.length < 2040 then
-  tactic.run_io  (λ i, @io.buffer_cmd i { cmd := "python2", args := args.append [/-escape_quotes -/cmd'] })
+  tactic.unsafe_run_io $ io.buffer_cmd { cmd := "python2", args := args.append [/-escape_quotes -/cmd'] }
 else do 
    path ← mathematica.temp_file_name "exch",
-   tactic.run_io (λ i, @write_file i path cmd' io.mode.write),
-   tactic.run_io (λ i, @io.buffer_cmd i { cmd := "python2", args := args.append ["-f", path] })
+   unsafe_run_io $ write_file path cmd' io.mode.write,
+   unsafe_run_io $ io.buffer_cmd { cmd := "python2", args := args.append ["-f", path] }
 
    
 meta def execute_and_eval (cmd : string) : tactic mmexpr :=
@@ -149,7 +150,7 @@ execute cmd ["-g"]
 Returns the path to {run_directory}/extras/
 -/
 meta def extras_path : tactic string :=
-do s ← run_io $ λ i, @io.cmd i {cmd := "pwd"},
+do s ← unsafe_run_io $ io.cmd {cmd := "pwd"},
    return $ strip_trailing_whitespace s ++ "/extras/"
 
 end mathematica
@@ -261,7 +262,7 @@ private meta def app_to_expr_unkeyed_rule :
 private meta def expr_of_mmexpr_app_keyed (env : trans_env) : mmexpr → list mmexpr → tactic expr
 | (sym hd) args :=
   do expr_db ← app_to_expr_keyed_rule.get_cache,
-     tactic.first $ (find expr_db hd).for $ λ f, f env args
+     tactic.first $ (rb_lmap.find expr_db hd).for $ λ f, f env args
 | _ _ := failed
 
 private meta def expr_of_mmexpr_app_unkeyed (env : trans_env) (hd : mmexpr) (args : list mmexpr) : tactic expr :=
@@ -276,7 +277,7 @@ expr_of_mmexpr_app_unkeyed env m l
 private meta def pexpr_of_mmexpr_app_keyed (env : trans_env) : mmexpr → list mmexpr → tactic pexpr
 | (sym hd) args := 
   do expr_db ← app_to_pexpr_keyed_rule.get_cache,
-     tactic.first $ (find expr_db hd).for $ λ f, f env args
+     tactic.first $ (rb_lmap.find expr_db hd).for $ λ f, f env args
 | _ _ := failed
 
 
@@ -309,7 +310,7 @@ the attribute manager. env maps symbols (representing bound variables) to placeh
 meta def expr_of_mmexpr : trans_env → mmexpr → tactic expr
 | env (sym s)       := find_in_env env s <|> 
   do expr_db ← sym_to_expr_rule.get_cache,
-     match find expr_db s with
+     match rb_lmap.find expr_db s with
      | (h :: t) := return h
      | []       := fail ("Couldn't find translation for sym \"" ++ s ++ "\"")
      end
@@ -322,7 +323,7 @@ private meta def pexpr_of_mmexpr_aux (env : trans_env)
          (pexpr_of_mmexpr : trans_env → mmexpr → tactic pexpr) :  mmexpr → tactic pexpr
 | (sym s)   := 
   do expr_db ← sym_to_pexpr_rule.get_cache,
-     match find expr_db s with
+     match rb_lmap.find expr_db s with
      | (h :: t) := return h
      | []       := parse_name_tac s >>= resolve_name <|> fail ("Couldn't find translation for sym \"" ++ s ++ "\"")
      end
@@ -614,7 +615,7 @@ meta def function_to_pexpr : app_trans_pexpr_keyed_rule :=
      return $ mk_lambda' v bd' 
 | [app (sym "List") l, bd] :=
   do vs ← list.mfor l sym_to_lcp,
-     bd' ← pexpr_of_mmexpr (env.insert_list vs) bd,
+     bd' ← pexpr_of_mmexpr (rb_map.insert_list env vs) bd,
      return $ mk_lambdas (list.map prod.snd vs) bd'
 | _ := failed
 end⟩
@@ -629,7 +630,7 @@ meta def forall_to_pexpr : app_trans_pexpr_keyed_rule :=
      return $ mk_pi' v bd' 
 | [app (sym "List") l, bd] :=
   do vs ← list.mfor l sym_to_lcp,
-     bd' ← pexpr_of_mmexpr (env.insert_list vs) bd,
+     bd' ← pexpr_of_mmexpr (rb_map.insert_list env vs) bd,
      return $ mk_pis (list.map prod.snd vs) bd'
 | [sym x, t, bd] := 
   do v ← return $ mk_local_const_placeholder x,
@@ -648,7 +649,7 @@ meta def forall_typed_to_pexpr : app_trans_pexpr_keyed_rule :=
      return $ mk_pi' pe bd'
 | [app (sym "List") l, t, bd] :=
   do vs ← l.mfor (sym_to_lcs_using env t),
-     bd' ← pexpr_of_mmexpr (env.insert_list vs) bd,
+     bd' ← pexpr_of_mmexpr (rb_map.insert_list env vs) bd,
      return $ mk_pis (vs.map prod.snd) bd'
 | _ := failed
 end⟩

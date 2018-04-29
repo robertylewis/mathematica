@@ -173,7 +173,7 @@ end
 namespace mathematica
 
 section
-variable [io.interface]
+
 def write_file (fn : string) (cnts : string) (mode := io.mode.write) : io unit := do
 h ← io.mk_file_handle fn io.mode.write,
 io.fs.write h cnts.to_char_buffer,
@@ -193,11 +193,10 @@ do b ← exists_file (base ++ to_string n ++ ".txt"),
 end
 
 meta def temp_file_name (base : string) : tactic string :=
-do n ← tactic.run_io (λ i, @new_text_file i base 0),
+do n ← tactic.unsafe_run_io $ new_text_file base 0,
    return $ base ++ to_string n ++ ".txt"
 end mathematica
 
-variable [io.interface]
 def io.buffer_cmd (args : io.process.spawn_args) : io char_buffer :=
 do child ← io.proc.spawn { args with stdout := io.process.stdio.piped },
   buf ← io.fs.read_to_end child.stdout,

@@ -1,6 +1,6 @@
 [package]
 name = "mathematica"
 version = "0.1"
-lean_version = "3.3.0"
+lean_version = "3.4.1"
 
 [dependencies]
