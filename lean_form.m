@@ -68,6 +68,9 @@ LeanForm[LeanApp[
 LeanForm[LeanApp[LeanApp[LeanConst[LeanName["nat", "pow"], _], 
     x_], y_], v_] := Inactive[Power][LeanForm[x, v], LeanForm[y, v]]
 
+LeanForm[LeanApp[LeanApp[LeanApp[LeanApp[LeanApp[LeanConst[LeanName["has_pow", "pow"], _], 
+    _], _], _], x_], y_], v_] := Inactive[Power][LeanForm[x, v], LeanForm[y, v]]
+
 LeanForm[LeanApp[LeanApp[LeanConst[LeanName["and"], _], x_], y_], 
   v_] := Inactive[And][LeanForm[x, v], LeanForm[y, v]]
 

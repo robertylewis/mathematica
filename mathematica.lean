@@ -1,4 +1,4 @@
-/-
+﻿/-
 Copyright (c) 2017 Robert Y. Lewis. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Author: Robert Y. Lewis
@@ -151,7 +151,7 @@ Returns the path to {run_directory}/extras/
 -/
 meta def extras_path : tactic string :=
 do s ← unsafe_run_io $ io.cmd {cmd := "pwd"},
-   return $ strip_trailing_whitespace s ++ "/extras/"
+   return $ strip_trailing_whitespace s ++ "/src/extras/"
 
 end mathematica
 end tactic
