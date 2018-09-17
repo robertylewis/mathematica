@@ -97,10 +97,10 @@ do str "A",
    ch ']',
    return $ mmexpr.app hd args
 
-meta def parse_mmexpr_aux (p : parser mmexpr) : parser mmexpr :=
+def parse_mmexpr_aux (p : parser mmexpr) : parser mmexpr :=
 parse_int <|> parse_string <|> parse_symbol <|> (parse_app_aux p)
 
-meta def parse_mmexpr : parser mmexpr := fix parse_mmexpr_aux
+def parse_mmexpr : parser mmexpr := fix parse_mmexpr_aux
 
 private def make_monospaced : char → char
 | '\n' := ' '

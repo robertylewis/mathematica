@@ -14,9 +14,6 @@ universes u v w
 
 def for : list α → (α → β) → list β := flip map
 
-def mfor {m : Type u → Type v} [monad m] {α : Type w} {β : Type u} (l : list α) (f : α → m β) : m (list β) :=
-mmap f l
-
 end list
 
 meta def rb_lmap.of_list {key : Type} {data : Type} [has_lt key] [decidable_rel ((<) : key → key → Prop)] : list (key × data) → rb_lmap key data
@@ -152,6 +149,8 @@ do path ← get_cwd,
    io.fs.put_str_ln stdin cmd >> io.fs.flush stdin,
    io.fs.close stdin,
    s ← io.fs.read_to_end stdout,
+   exitv ← io.proc.wait child,
+   when (exitv ≠ 0) $ io.fail $ "process exited with status " ++ to_string exitv,
    io.fs.close stdout, return s
 
 meta def execute (cmd : string) (add_args : list string := []) : tactic char_buffer := 
@@ -172,8 +171,8 @@ execute cmd ["-g"]
 Returns the path to {run_directory}/extras/
 -/
 meta def extras_path : tactic string :=
-do s ← unsafe_run_io $ io.cmd {cmd := "pwd"},
-   return $ strip_trailing_whitespace s ++ "/src/extras/"
+unsafe_run_io get_cwd >>= 
+λ s, pure $ strip_trailing_whitespace s ++ "/src/extras/"
 
 end mathematica
 end tactic
@@ -501,28 +500,28 @@ meta def pexpr_fold_op (dflt op : pexpr) : list pexpr → pexpr
 @[app_to_pexpr_keyed]
 meta def add_to_pexpr : app_trans_pexpr_keyed_rule :=
 ⟨"Plus", 
-λ env args, do args' ← list.mfor args (pexpr_of_mmexpr env), return $ pexpr_fold_op ```(0) ```(has_add.add) args'⟩
+λ env args, do args' ← monad.mapm (pexpr_of_mmexpr env) args, return $ pexpr_fold_op ```(0) ```(has_add.add) args'⟩
 
 @[app_to_pexpr_keyed]
 meta def mul_to_pexpr : app_trans_pexpr_keyed_rule :=
 ⟨"Times", 
-λ env args, do args' ← list.mfor args (pexpr_of_mmexpr env), return $ pexpr_fold_op ```(1) ```(has_mul.mul) args'⟩
+λ env args, do args' ← monad.mapm (pexpr_of_mmexpr env) args, return $ pexpr_fold_op ```(1) ```(has_mul.mul) args'⟩
 
 @[app_to_pexpr_keyed]
 meta def list_to_pexpr : app_trans_pexpr_keyed_rule := 
 ⟨"List", λ env args, 
-         do args' ← list.mfor args (pexpr_of_mmexpr env), 
+         do args' ← monad.mapm (pexpr_of_mmexpr env) args, 
             return $ list.foldr (λ h t, ```(%%h :: %%t)) ```([]) args'⟩
 
 @[app_to_pexpr_keyed]
 meta def and_to_pexpr : app_trans_pexpr_keyed_rule :=
 ⟨"And", 
-λ env args, do args' ← list.mfor args (pexpr_of_mmexpr env), return $ pexpr_fold_op ```(true) ```(and) args'⟩
+λ env args, do args' ← monad.mapm (pexpr_of_mmexpr env) args, return $ pexpr_fold_op ```(true) ```(and) args'⟩
 
 @[app_to_pexpr_keyed]
 meta def or_to_pexpr : app_trans_pexpr_keyed_rule :=
 ⟨"Or", 
-λ env args, do args' ← list.mfor args (pexpr_of_mmexpr env), return $ pexpr_fold_op ```(false) ```(or) args'⟩
+λ env args, do args' ← monad.mapm (pexpr_of_mmexpr env) args, return $ pexpr_fold_op ```(false) ```(or) args'⟩
 
 @[app_to_pexpr_keyed]
 meta def not_to_pexpr : app_trans_pexpr_keyed_rule :=
@@ -636,7 +635,7 @@ meta def function_to_pexpr : app_trans_pexpr_keyed_rule :=
      bd' ← pexpr_of_mmexpr (env.insert x v) bd,
      return $ mk_lambda' v bd' 
 | [app (sym "List") l, bd] :=
-  do vs ← list.mfor l sym_to_lcp,
+  do vs ← monad.mapm sym_to_lcp l,
      bd' ← pexpr_of_mmexpr (rb_map.insert_list env vs) bd,
      return $ mk_lambdas (list.map prod.snd vs) bd'
 | _ := failed
@@ -651,7 +650,7 @@ meta def forall_to_pexpr : app_trans_pexpr_keyed_rule :=
      bd' ← pexpr_of_mmexpr (env.insert x v) bd,
      return $ mk_pi' v bd' 
 | [app (sym "List") l, bd] :=
-  do vs ← list.mfor l sym_to_lcp,
+  do vs ← monad.mapm sym_to_lcp l,
      bd' ← pexpr_of_mmexpr (rb_map.insert_list env vs) bd,
      return $ mk_pis (list.map prod.snd vs) bd'
 | [sym x, t, bd] := 
@@ -670,7 +669,7 @@ meta def forall_typed_to_pexpr : app_trans_pexpr_keyed_rule :=
      bd' ← pexpr_of_mmexpr (env.insert n pe) bd,
      return $ mk_pi' pe bd'
 | [app (sym "List") l, t, bd] :=
-  do vs ← l.mfor (sym_to_lcs_using env t),
+  do vs ← monad.mapm (sym_to_lcs_using env t) l,
      bd' ← pexpr_of_mmexpr (rb_map.insert_list env vs) bd,
      return $ mk_pis (vs.map prod.snd) bd'
 | _ := failed
