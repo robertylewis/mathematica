@@ -117,13 +117,13 @@ b.read' (b.size-1)
 meta def strip_trailing_whitespace_cb : char_buffer → char_buffer := λ s,
 if s.back = '\n' ∨ s.back = ' ' then strip_trailing_whitespace_cb s.pop_back else s
 
-meta def escape_quotes_cb (s : char_buffer) : char_buffer :=
+def escape_quotes_cb (s : char_buffer) : char_buffer :=
 s.foldl buffer.nil (λ c s', if c = '\"' then s' ++ "\\\"".to_char_buffer else s'.push_back c)
 
-meta def escape_term_buffer_cb (s : char_buffer) : char_buffer :=
+def escape_term_buffer_cb (s : char_buffer) : char_buffer :=
 s.foldl buffer.nil (λ c s', if c = '&' then s' ++ "&&".to_char_buffer else s'.push_back c)
 
-meta def quote_string_cb (s : char_buffer) : char_buffer :=
+def quote_string_cb (s : char_buffer) : char_buffer :=
 "\'".to_char_buffer ++ s ++ "\'".to_char_buffer
 
 
@@ -133,18 +133,20 @@ def mk_mono (s : string) : string :=
 meta def strip_trailing_whitespace : string → string := λ s,
 if s.back = '\n' ∨ s.back = ' ' then strip_trailing_whitespace s.pop_back else s
 
-meta def escape_quotes (s : string) : string :=
+def strip_newline : string → string := λ s,
+if s.back = '\n' then s.pop_back else s
+
+def escape_quotes (s : string) : string :=
 s.fold "" (λ s' c, if c = '\"' then s' ++ "\\\"" else s'.str c)
 
-meta def escape_term (s : string) : string :=
+def escape_term (s : string) : string :=
 s.fold "" (λ s' c, if c = '&' then s' ++ "&&" else s'.str c)
 
-meta def escape_slash (s : string) : string :=
+def escape_slash (s : string) : string :=
 s.fold "" (λ s' c, if c = '\\' then s' ++ "\\\\" else s'.str c)
 
-meta def quote_string (s : string) : string :=
+def quote_string (s : string) : string :=
 "\'" ++ s ++ "\'"
-
 
 meta def parse_mmexpr_tac (s : char_buffer) : tactic mmexpr :=
 match parser.run parse_mmexpr ((strip_trailing_whitespace_cb ∘ mk_mono_cb) s) with

@@ -124,16 +124,38 @@ execute str evaluates str in Mathematica.
 The evaluation happens in a unique context; declarations that are made during
 evaluation will not be available in future evaluations.
 -/
-meta def execute (cmd : string) (add_args : list string := []) : tactic char_buffer :=
-let cmd' := escape_term cmd ++ "&!",
-    args := ["_target/deps/mathematica/client2.py"].append add_args in
-if cmd'.length < 2040 then
-  tactic.unsafe_run_io $ io.buffer_cmd { cmd := "python2", args := args.append [/-escape_quotes -/cmd'] }
-else do 
-   path ← mathematica.temp_file_name "exch",
-   unsafe_run_io $ write_file path cmd' io.mode.write,
-   unsafe_run_io $ io.buffer_cmd { cmd := "python2", args := args.append ["-f", path] }
+-- meta def execute (cmd : string) (add_args : list string := []) : tactic char_buffer :=
+-- let cmd' := escape_term cmd ++ "&!",
+--     args := ["_target/deps/mathematica/client2.py"].append add_args in
+-- if cmd'.length < 2040 then
+--   tactic.unsafe_run_io $ io.buffer_cmd { cmd := "python2", args := args.append [/-escape_quotes -/cmd'] }
+-- else do 
+--    path ← mathematica.temp_file_name "exch",
+--    unsafe_run_io $ write_file path cmd' io.mode.write,
+--    unsafe_run_io $ io.buffer_cmd { cmd := "python2", args := args.append ["-f", path] }
 
+def get_cwd : io string := io.cmd {cmd := "pwd"} >>= λ s, pure $ strip_newline s
+
+def exec (cmd : string) (add_args : list string := []) : io char_buffer :=
+do path ← get_cwd,
+   child ← io.proc.spawn
+   { cmd := "wolfram",
+     args := ["-noprompt"] ++ add_args,
+     stdin := io.process.stdio.piped,
+     stdout := io.process.stdio.piped,
+     cwd := some (path ++ "/_target/deps/mathematica/"),
+     stderr := io.process.stdio.inherit },
+   let stdin := child.stdin,
+   let stdout := child.stdout,
+   let cmd := cmd ++ "// OutputFormat // ToExpression",
+   io.fs.put_str_ln stdin "<<\"lean_form.m\"" >> io.fs.flush stdin,
+   io.fs.put_str_ln stdin cmd >> io.fs.flush stdin,
+   io.fs.close stdin,
+   s ← io.fs.read_to_end stdout,
+   io.fs.close stdout, return s
+
+meta def execute (cmd : string) (add_args : list string := []) : tactic char_buffer := 
+unsafe_run_io $ exec cmd add_args
    
 meta def execute_and_eval (cmd : string) : tactic mmexpr :=
 execute cmd >>= parse_mmexpr_tac
