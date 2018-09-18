@@ -133,7 +133,7 @@ evaluation will not be available in future evaluations.
 
 def get_cwd : io string := io.cmd {cmd := "pwd"} >>= λ s, pure $ strip_newline s
 
-def exec (cmd : string) (add_args : list string := []) : io char_buffer :=
+def exec (cmds : list string) (add_args : list string := []) : io char_buffer :=
 do path ← get_cwd,
    child ← io.proc.spawn
    { cmd := "wolfram",
@@ -144,9 +144,10 @@ do path ← get_cwd,
      stderr := io.process.stdio.inherit },
    let stdin := child.stdin,
    let stdout := child.stdout,
-   let cmd := cmd ++ "// OutputFormat // ToExpression",
+   let seq := λ s, let cmd := s ++ "// OutputFormat // ToExpression" in 
+              (io.fs.put_str_ln stdin cmd >> io.fs.flush stdin),
    io.fs.put_str_ln stdin "<<\"lean_form.m\"" >> io.fs.flush stdin,
-   io.fs.put_str_ln stdin cmd >> io.fs.flush stdin,
+   monad.sequence $ cmds.map seq,
    io.fs.close stdin,
    s ← io.fs.read_to_end stdout,
    exitv ← io.proc.wait child,
@@ -154,7 +155,7 @@ do path ← get_cwd,
    io.fs.close stdout, return s
 
 meta def execute (cmd : string) (add_args : list string := []) : tactic char_buffer := 
-unsafe_run_io $ exec cmd add_args
+unsafe_run_io $ exec [cmd] add_args
    
 meta def execute_and_eval (cmd : string) : tactic mmexpr :=
 execute cmd >>= parse_mmexpr_tac
