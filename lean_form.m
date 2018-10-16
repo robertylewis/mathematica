@@ -191,3 +191,10 @@ OutputFormat[s_Symbol] := "Y[" <> ToString[s] <> "]"
 OutputFormat[h_[args___]] := 
  "A" <> OutputFormat[h] <> "[" <> 
   StringRiffle[Map[OutputFormat, List[args]], ","] <> "]"
+
+listener = 
+ SocketListen[SocketOpen[45678], 
+  Function[{assoc}, 
+   With[{client = assoc["SourceSocket"], res = assoc["Data"]}, 
+	WriteString[client, res // ToExpression];
+    Close[client]]]]
