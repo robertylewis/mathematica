@@ -5,7 +5,6 @@ import os
 import argparse
 import time
 import threading
-
 DETACHED_PROCESS = 0x00000008
 
 class ServerThread(threading.Thread):
@@ -16,7 +15,7 @@ class ServerThread(threading.Thread):
                             #)
         os.system('math --noprompt -run "<<server2.m" > /dev/null')
 
-        
+
 def restart_server():
     fnull=open(os.devnull,'w')
     t = ServerThread()
@@ -26,37 +25,45 @@ def restart_server():
 #                            ,stdout=fnull#, stdin=fnull, stderr=fnull
 #    )
 
+skt = 10000
 
 def process(s, is_global, start_server):
     sep = ' '
     clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        clientsocket.connect(('localhost', 10000))
+        clientsocket.connect(('localhost', skt))
     except socket.error as e:
         time.sleep(.2)
-        print "error", e
+        print("error"), e
         if start_server:
-            print "restarting server"
+            print("restarting server")
             pid = restart_server()
            # print pid.pid
             time.sleep(.5)
            # print pid.poll()
-            clientsocket.connect(('localhost', 10000))
+            clientsocket.connect(('localhost', skt))
         else:
             return
-    clientsocket.send(s + ("1" if is_global else "0"))
+    clientsocket.send((s + ("1" if is_global else "0")).encode('utf-8'))
     buf = ''
+    """     r, w, e = select.select([clientsocket], [], [])#1.0
+    while r:
+        print('r was true')
+        buf += clientsocket.recv(1)
+        r, w, e = select.select([clientsocket], [], [])
+        print('recvd')
+        print(buf.decode('utf-8'))
+    buf = buf.decode('utf-8') """
     while sep not in buf:
-        buf += clientsocket.recv(8)
+        buf += clientsocket.recv(1).decode('utf-8')
     splt = buf.split(sep, 1)
     num = int(splt[0])
-    recvd = 8
-    buf = splt[1]
-    while recvd < num:
-        buf += clientsocket.recv(8)
-        recvd += 8
-    buf += clientsocket.recv(8)
-    print buf
+    buf = clientsocket.recv(num).decode('utf-8') #splt[1]
+    #while recvd < num:
+    #    buf += clientsocket.recv(8)
+    #    recvd += 8
+    #buf += clientsocket.recv(8)
+    print(buf)
 
 def read_from_file(path):
     f = open(path, "r")
@@ -66,7 +73,7 @@ def read_from_file(path):
     return s
 
 parser = argparse.ArgumentParser(description="Communicate with Mathematica.")
-parser.add_argument('-f', action='store_true') # file 
+parser.add_argument('-f', action='store_true') # file
 parser.add_argument('-g', action='store_true') # global
 parser.add_argument('-b', action='store_true') # attempt to talk but don't start server
 parser.add_argument('-s', action='store_true') # only attempt to start server
