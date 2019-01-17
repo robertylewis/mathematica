@@ -45,6 +45,7 @@ def process(s, is_global, start_server):
         else:
             return
     clientsocket.send((s + ("1" if is_global else "0")).encode('utf-8'))
+    print("sending")
     buf = ''
     """     r, w, e = select.select([clientsocket], [], [])#1.0
     while r:
@@ -55,6 +56,7 @@ def process(s, is_global, start_server):
         print(buf.decode('utf-8'))
     buf = buf.decode('utf-8') """
     while sep not in buf:
+        print("ok")
         buf += clientsocket.recv(1).decode('utf-8')
     splt = buf.split(sep, 1)
     num = int(splt[0])

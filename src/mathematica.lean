@@ -122,19 +122,9 @@ The evaluation happens in a unique context; declarations that are made during
 evaluation will not be available in future evaluations.
 -/
 meta def execute (cmd : string) (add_args : list string := []) : tactic char_buffer :=
-/- let cmd' := escape_term cmd ++ "&!",
-    args := ["src/client2.py"].append add_args in
-    --args := ["_target/deps/mathematica/client2.py"].append add_args in
-if cmd'.length < 2040 then do trace cmd' >> failed
- -- tactic.unsafe_run_io $ io.buffer_cmd { cmd := "python2", args := args.append [/-escape_quotes -/cmd'] }
-else do
-   path ← mathematica.temp_file_name "exch",
-   unsafe_run_io $ write_file path cmd' io.mode.write,
-   unsafe_run_io $ io.buffer_cmd { cmd := "python2", args := args.append ["-f", path] }meta def execute (cmd : string) (add_args : list string := []) : tactic char_buffer :=
- -/
-let cmd' := escape_term cmd,-- ++ "&!",
+let cmd' := escape_term cmd ++ "&!",
 --    args := ["src/client2.py"].append add_args in
-    args := ["_target/deps/mathematica/client2.py"].append add_args in
+    args := ["_target/deps/mathematica/src/client2.py"].append add_args in
 if cmd'.length < 2040 then
   tactic.unsafe_run_io $ io.buffer_cmd { cmd := "python2", args := args.append [/-escape_quotes -/cmd'] }
 else do
@@ -143,25 +133,6 @@ else do
    unsafe_run_io $ io.buffer_cmd { cmd := "python2", args := args.append ["-f", path] }
 def get_cwd : io string := io.cmd {cmd := "pwd"} >>= λ s, pure $ strip_newline s
 
-def exec (cmds : string) (add_args : list string := []) : io char_buffer :=
-do child ← io.proc.spawn
-   { cmd := "nc",
-     args := ["127.0.0.1", "45678"] ++ add_args,
-     stdin := io.process.stdio.piped,
-     stdout := io.process.stdio.piped,
-     stderr := io.process.stdio.inherit },
-   let stdin := child.stdin,
-   let stdout := child.stdout,
-   io.fs.put_str_ln stdin (cmds ++ "// OutputFormat // ToExpression") >> io.fs.flush stdin,
-   io.fs.close stdin,
-   s ← io.fs.read_to_end stdout,
-   exitv ← io.proc.wait child,
-   when (exitv ≠ 0) $ io.fail $ "process exited with status " ++ to_string exitv,
-   io.fs.close stdout, return s
-
-/- meta def execute (cmd : string) (add_args : list string := []) : tactic char_buffer :=
-unsafe_run_io $ exec cmd add_args
- -/
 meta def execute_and_eval (cmd : string) : tactic mmexpr :=
 execute cmd >>= parse_mmexpr_tac
 

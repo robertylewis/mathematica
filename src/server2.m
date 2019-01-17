@@ -7,8 +7,6 @@ cctr = 0;
 mgc = "MyGlobalContext`";
 ClearAll["Global`*"];
 
-
-(* << "SocketLink`" *)
 << "lean_form.m"
 
 WindowsDirQ[s_String] := StringTake[s, 1] != "/";
@@ -28,15 +26,26 @@ OutputFormat[h_[args___]] :=
  "A" <> OutputFormat[h] <> "[" <>
   StringRiffle[Map[OutputFormat, List[args]], ","] <> "]"
 
-CreateResponse[query_] :=
-  Module[{o, g=ToExpression[StringTake[query,-1]], xct},
+resp := ""
+
+AccumulateResponse[query_] :=
+  resp = resp <> ToString[query]; Print[resp]
+
+ResponseCompleteQ[] := StringTake[resp,{-3,-2}] == "&!"
+
+CreateResponse[] :=
+  Module[{o, g=ToExpression[StringTake[resp,-1]], xct},
     xct = If[g==0,"LeanLinkCtx`",mgc];
     $Context = xct;
-    o = ToExpression[StringDrop[query,-1]] // OutputFormat;
+    o = ToExpression[StringDrop[StringReplace[resp,"&&"->"&"],-3]] // OutputFormat;
     $Context = mgc;
     ClearAll["Global`*"];
     ClearAll["LeanLinkCtx`*"];
+    resp = "";
     ToString[StringLength[o]] <> " " <> o] (* ByteCount instead?*)
 
-SocketListen[s, With[{resp=CreateResponse[#["Data"]]}, Print[#["Data"]]; Print[resp]; WriteString[#["SourceSocket"], resp]]&];
+SocketListen[s,
+  (AccumulateResponse[#["Data"]];
+  If[ResponseCompleteQ[],
+    Print[resp]; With[{out=CreateResponse[]}, Print[out]; WriteString[#["SourceSocket"], out]], True])&];
 
