@@ -123,14 +123,13 @@ evaluation will not be available in future evaluations.
 -/
 meta def execute (cmd : string) (add_args : list string := []) : tactic char_buffer :=
 let cmd' := escape_term cmd ++ "&!",
---    args := ["src/client2.py"].append add_args in
     args := ["_target/deps/mathematica/src/client2.py"].append add_args in
 if cmd'.length < 2040 then
-  tactic.unsafe_run_io $ io.buffer_cmd { cmd := "python2", args := args.append [/-escape_quotes -/cmd'] }
+  tactic.unsafe_run_io $ io.buffer_cmd { cmd := "python3", args := args.append [/-escape_quotes -/cmd'] }
 else do
    path ← mathematica.temp_file_name "exch",
    unsafe_run_io $ write_file path cmd' io.mode.write,
-   unsafe_run_io $ io.buffer_cmd { cmd := "python2", args := args.append ["-f", path] }
+   unsafe_run_io $ io.buffer_cmd { cmd := "python3", args := args.append ["-f", path] }
 def get_cwd : io string := io.cmd {cmd := "pwd"} >>= λ s, pure $ strip_newline s
 
 meta def execute_and_eval (cmd : string) : tactic mmexpr :=
