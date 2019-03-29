@@ -484,6 +484,11 @@ meta def mul_to_pexpr : app_trans_pexpr_keyed_rule :=
 λ env args, do args' ← monad.mapm (pexpr_of_mmexpr env) args, return $ pexpr_fold_op ```(1) ```(has_mul.mul) args'⟩
 
 @[app_to_pexpr_keyed]
+meta def pow_to_pexpr : app_trans_pexpr_keyed_rule :=
+⟨"Power",
+λ env args, do args' ← monad.mapm (pexpr_of_mmexpr env) args, return $ pexpr_fold_op ```(1) ```(has_pow.pow) args'⟩
+
+@[app_to_pexpr_keyed]
 meta def list_to_pexpr : app_trans_pexpr_keyed_rule :=
 ⟨"List", λ env args,
          do args' ← monad.mapm (pexpr_of_mmexpr env) args,
