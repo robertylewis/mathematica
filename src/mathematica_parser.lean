@@ -7,9 +7,9 @@ local attribute [instance] htfi
 
 
 structure mfloat :=
-(sign     : nat)
-(mantisa  : nat)
-(exponent : nat)
+(sign     : ℕ)
+(mantisa  : ℕ)
+(exponent : ℕ)
 
 local notation `float` := mfloat
 
@@ -47,7 +47,7 @@ meta def mmexpr_to_format : mmexpr → format
 
 meta instance : has_to_format mmexpr := ⟨mmexpr_to_format⟩
 
-def nat_of_char : char → nat
+def nat_of_char : char → ℕ
 | '0' := 0
 | '1' := 1
 | '2' := 2
@@ -60,7 +60,7 @@ def nat_of_char : char → nat
 | '9' := 9
 |  _  := 0
 
-def nat_of_string_aux : nat → nat → list char → nat
+def nat_of_string_aux : ℕ → ℕ → list char → ℕ
 | weight acc [] := acc
 | weight acc (h::t) := nat_of_string_aux (weight*10) (weight * (nat_of_char h) + acc) t 
 
@@ -187,7 +187,7 @@ ch ← io.proc.spawn { cmd := "test", args := ["-f", f] },
 ev ← io.proc.wait ch,
 return $ ev = 0
 
-meta def new_text_file : string → nat → io nat | base n :=
+meta def new_text_file : string → ℕ → io nat | base n :=
 do b ← exists_file (base ++ to_string n ++ ".txt"),
    if b then new_text_file base (n+1)
    else return n
