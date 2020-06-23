@@ -149,9 +149,9 @@ LeanForm[LeanApp[
    LeanApp[LeanApp[LeanConst[LeanName["eq"], _], _], x_], y_],
    v_] := Inactive[Equal][LeanForm[x, v], LeanForm[y, v]]
 
-LeanForm[LeanApp[LeanConst[LeanName["sin"],_],x_], v_] := Inactive[Sin][LeanForm[x, v]]
-LeanForm[LeanApp[LeanConst[LeanName["cos"],_],x_], v_] := Inactive[Cos][LeanForm[x, v]]
-LeanForm[LeanApp[LeanConst[LeanName["tan"],_],x_], v_] := Inactive[Tan][LeanForm[x, v]]
+LeanForm[LeanApp[LeanConst[LeanName["real","sin"],_],x_], v_] := Inactive[Sin][LeanForm[x, v]]
+LeanForm[LeanApp[LeanConst[LeanName["real","cos"],_],x_], v_] := Inactive[Cos][LeanForm[x, v]]
+LeanForm[LeanApp[LeanConst[LeanName["real","tan"],_],x_], v_] := Inactive[Tan][LeanForm[x, v]]
 LeanForm[LeanConst[LeanName["pi"], _], v_] := Pi
 
 LeanForm[LeanConst[LeanName["true"], _], v_] := True
@@ -198,3 +198,16 @@ listener =
    With[{client = assoc["SourceSocket"], res = assoc["Data"]},
 	WriteString[client, res // ToExpression];
     Close[client]]]]
+
+MakeDataUrlFromImage[img_] :=
+ Module[
+  {tempFile = CreateTemporary[] <> ".png.b64",
+    out},
+  Export[tempFile, img];
+  out = "data:image/png;base64," <>
+    StringDelete[ReadString[tempFile], "\n"];
+  CopyToClipboard[out];
+  out]
+
+PlotOverX[f_, {X_, lb_, ub_}] := Module[{nv, re},
+  re = f /. X -> nv; Plot[re, {nv, lb, ub}]]
