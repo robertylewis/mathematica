@@ -149,10 +149,10 @@ LeanForm[LeanApp[
    LeanApp[LeanApp[LeanConst[LeanName["eq"], _], _], x_], y_],
    v_] := Inactive[Equal][LeanForm[x, v], LeanForm[y, v]]
 
-LeanForm[LeanApp[LeanConst[LeanName["sin"],_],x_], v_] := Inactive[Sin][LeanForm[x, v]]
-LeanForm[LeanApp[LeanConst[LeanName["cos"],_],x_], v_] := Inactive[Cos][LeanForm[x, v]]
-LeanForm[LeanApp[LeanConst[LeanName["tan"],_],x_], v_] := Inactive[Tan][LeanForm[x, v]]
-LeanForm[LeanConst[LeanName["pi"], _], v_] := Pi
+LeanForm[LeanApp[LeanConst[LeanName["real","sin"],_],x_], v_] := Inactive[Sin][LeanForm[x, v]]
+LeanForm[LeanApp[LeanConst[LeanName["real","cos"],_],x_], v_] := Inactive[Cos][LeanForm[x, v]]
+LeanForm[LeanApp[LeanConst[LeanName["real","tan"],_],x_], v_] := Inactive[Tan][LeanForm[x, v]]
+LeanForm[LeanConst[LeanName["real","pi"], _], v_] := Pi
 
 LeanForm[LeanConst[LeanName["true"], _], v_] := True
 
