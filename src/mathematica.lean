@@ -693,7 +693,7 @@ meta def union_to_pexpr : sym_trans_pexpr_rule :=
 
 @[sym_to_pexpr]
 meta def compl_to_pexpr : sym_trans_pexpr_rule :=
-⟨"SetCompl", ```(has_neg.neg)⟩
+⟨"SetCompl", ```(has_compl.compl)⟩
 
 @[sym_to_pexpr]
 meta def empty_to_pexpr : sym_trans_pexpr_rule :=
