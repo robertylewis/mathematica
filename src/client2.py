@@ -7,13 +7,14 @@ import time
 import threading
 DETACHED_PROCESS = 0x00000008
 
+
 class ServerThread(threading.Thread):
     def run(self):
         #fnull=open(os.devnull,'w')
         #subprocess.Popen(["math", "--noprompt", "-run", '"<<\"~/Dropbox/lean/mathematica/server2.m\""']
                            # ,stdout=fnull, stdin=fnull, stderr=fnull
                             #)
-        os.system('math --noprompt -run "<<server2.m" > /dev/null')
+        os.system('wolfram -noprompt -run "<<server2.m" > /dev/null')
 
 
 def restart_server():
