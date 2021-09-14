@@ -42,10 +42,11 @@ CreateResponse[] :=
     ClearAll["Global`*"];
     ClearAll["LeanLinkCtx`*"];
     resp = "";
-    ToString[StringLength[o]] <> " " <> o] (* ByteCount instead?*)
+    StringToByteArray[o]]
 
 SocketListen[s,
   (AccumulateResponse[#["Data"]];
   If[ResponseCompleteQ[],
-    Print[resp]; With[{out=CreateResponse[]}, Print[out]; WriteString[#["SourceSocket"], out]], True])&];
+    Print[resp]; With[{out=CreateResponse[]}, Print[out]; 
+      WriteString[#["SourceSocket"], ToString[Length[out]] <> " "]; BinaryWrite[#["SourceSocket"], out]], True])&];
 

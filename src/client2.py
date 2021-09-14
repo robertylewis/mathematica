@@ -5,6 +5,7 @@ import os
 import argparse
 import time
 import threading
+
 DETACHED_PROCESS = 0x00000008
 
 
@@ -51,12 +52,12 @@ def process(s, is_global, start_server):
         buf += clientsocket.recv(1).decode('utf-8')
     splt = buf.split(sep, 1)
     num = int(splt[0])
-    buf = clientsocket.recv(num).decode('utf-8') #splt[1]
-    #while recvd < num:
-    #    buf += clientsocket.recv(8)
-    #    recvd += 8
-    #buf += clientsocket.recv(8)
-    print(buf)
+    recvd = 0
+    buf = bytearray()
+    while recvd < num:
+       buf.extend(clientsocket.recv(1))
+       recvd += 1
+    print(buf.decode('utf-8'))
 
 def read_from_file(path):
     f = open(path, "r")
