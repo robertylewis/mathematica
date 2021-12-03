@@ -739,7 +739,7 @@ end mathematica
 -- user-facing tactics
 namespace tactic
 namespace mathematica
-open mathematica
+open _root_.mathematica
 
 meta def mk_get_cmd (path : string) : tactic string :=
 do s ← extras_path,
